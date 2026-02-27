@@ -27,9 +27,9 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 		// Reset singleton before each test.
 		$this->reset_settings_manager_singleton();
 		// Clear any env vars.
-		putenv( 'AZURE_OPENAI_API_KEY' );
 		putenv( 'AZURE_OPENAI_ENDPOINT' );
 		putenv( 'AZURE_OPENAI_API_VERSION' );
+		putenv( 'AZURE_OPENAI_DEPLOYMENT_ID' );
 	}
 
 	/**
@@ -42,63 +42,6 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 		$instance2 = Settings_Manager::get_instance();
 
 		$this->assertSame( $instance1, $instance2 );
-	}
-
-	/**
-	 * Test get_api_key returns value from settings.
-	 *
-	 * @return void
-	 */
-	public function test_get_api_key_from_settings(): void {
-		Functions\expect( 'get_option' )
-			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array( 'api_key' => 'test-api-key-123' ) );
-
-		$manager = Settings_Manager::get_instance();
-		$api_key = $manager->get_api_key();
-
-		$this->assertSame( 'test-api-key-123', $api_key );
-	}
-
-	/**
-	 * Test get_api_key falls back to environment variable.
-	 *
-	 * @return void
-	 */
-	public function test_get_api_key_falls_back_to_env(): void {
-		Functions\expect( 'get_option' )
-			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
-
-		$this->set_env( 'AZURE_OPENAI_API_KEY', 'env-api-key-456' );
-
-		$manager = Settings_Manager::get_instance();
-		$api_key = $manager->get_api_key();
-
-		$this->assertSame( 'env-api-key-456', $api_key );
-
-		$this->clear_env( 'AZURE_OPENAI_API_KEY' );
-	}
-
-	/**
-	 * Test get_api_key returns empty when no settings or env.
-	 *
-	 * @return void
-	 */
-	public function test_get_api_key_returns_empty_when_not_configured(): void {
-		Functions\expect( 'get_option' )
-			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
-
-		$this->clear_env( 'AZURE_OPENAI_API_KEY' );
-
-		$manager = Settings_Manager::get_instance();
-		$api_key = $manager->get_api_key();
-
-		$this->assertSame( '', $api_key );
 	}
 
 	/**
@@ -197,7 +140,7 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	}
 
 	/**
-	 * Test is_configured returns true when both api_key and endpoint are set.
+	 * Test is_configured returns true when endpoint is set.
 	 *
 	 * @return void
 	 */
@@ -208,7 +151,6 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 			->with( Settings_Manager::OPTION_NAME, array() )
 			->andReturn(
 				array(
-					'api_key'  => 'test-key',
 					'endpoint' => 'https://test.openai.azure.com',
 				)
 			);
@@ -219,19 +161,18 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	}
 
 	/**
-	 * Test is_configured returns false when api_key is missing.
+	 * Test is_configured returns false when endpoint is missing.
 	 *
 	 * @return void
 	 */
-	public function test_is_configured_returns_false_when_api_key_missing(): void {
+	public function test_is_configured_returns_false_when_endpoint_missing(): void {
 		// Clear any env vars that might provide a fallback.
-		putenv( 'AZURE_OPENAI_API_KEY' );
 		putenv( 'AZURE_OPENAI_ENDPOINT' );
 
 		Functions\expect( 'get_option' )
 			->once()
 			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array( 'endpoint' => 'https://test.openai.azure.com' ) );
+			->andReturn( array() );
 
 		$manager = Settings_Manager::get_instance();
 
@@ -247,16 +188,16 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 		$manager = Settings_Manager::get_instance();
 
 		$input = array(
-			'api_key'     => '  test-key-with-spaces  ',
-			'endpoint'    => 'https://my-resource.openai.azure.com',
-			'api_version' => '2024-02-15-preview',
+			'endpoint'      => 'https://my-resource.openai.azure.com',
+			'api_version'   => '2024-02-15-preview',
+			'deployment_id' => 'gpt-4o',
 		);
 
 		$sanitized = $manager->sanitize_settings( $input );
 
-		$this->assertSame( 'test-key-with-spaces', $sanitized['api_key'] );
 		$this->assertSame( 'https://my-resource.openai.azure.com', $sanitized['endpoint'] );
 		$this->assertSame( '2024-02-15-preview', $sanitized['api_version'] );
+		$this->assertSame( 'gpt-4o', $sanitized['deployment_id'] );
 	}
 
 	/**
@@ -268,16 +209,16 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 		Functions\expect( 'get_option' )
 			->once()
 			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array( 'api_key' => 'db-api-key' ) );
+			->andReturn( array( 'endpoint' => 'https://db-resource.openai.azure.com' ) );
 
-		$this->set_env( 'AZURE_OPENAI_API_KEY', 'env-api-key' );
+		$this->set_env( 'AZURE_OPENAI_ENDPOINT', 'https://env-resource.openai.azure.com' );
 
-		$manager = Settings_Manager::get_instance();
-		$api_key = $manager->get_api_key();
+		$manager  = Settings_Manager::get_instance();
+		$endpoint = $manager->get_endpoint();
 
 		// DB value should be returned, not env.
-		$this->assertSame( 'db-api-key', $api_key );
+		$this->assertSame( 'https://db-resource.openai.azure.com', $endpoint );
 
-		$this->clear_env( 'AZURE_OPENAI_API_KEY' );
+		$this->clear_env( 'AZURE_OPENAI_ENDPOINT' );
 	}
 }

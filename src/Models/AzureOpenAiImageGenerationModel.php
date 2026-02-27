@@ -16,6 +16,7 @@ use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use WordPress\AiClient\Providers\Models\ImageGeneration\Contracts\ImageGenerationModelInterface;
 use WordPress\AiClient\Results\DTO\GenerativeAiResult;
 use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
+use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 /**
  * Azure OpenAI Image Generation Model class.
@@ -23,6 +24,25 @@ use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
  * Implements image generation using Azure OpenAI's DALL-E API.
  */
 class AzureOpenAiImageGenerationModel extends AbstractApiBasedModel implements ImageGenerationModelInterface {
+
+	/**
+	 * Get the deployment ID to use.
+	 *
+	 * Uses the configured deployment ID from settings if available,
+	 * otherwise falls back to the model metadata ID.
+	 *
+	 * @return string The deployment ID.
+	 */
+	protected function getDeploymentId(): string {
+		$settings      = Settings_Manager::get_instance();
+		$deployment_id = $settings->get_deployment_id();
+
+		if ( ! empty( $deployment_id ) ) {
+			return $deployment_id;
+		}
+
+		return $this->metadata()->getId();
+	}
 
 	/**
 	 * Generate an image based on the provided prompt.
@@ -34,8 +54,8 @@ class AzureOpenAiImageGenerationModel extends AbstractApiBasedModel implements I
 		$http_transporter = $this->getHttpTransporter();
 		$params           = $this->prepareGenerateImageParams( $prompt );
 
-		// Build the Azure-specific URL: {endpoint}/openai/deployments/{model}/images/generations?api-version={version}
-		$url = AzureOpenAiProvider::deploymentUrl( $this->metadata()->getId(), 'images/generations' );
+		// Build the Azure-specific URL: {endpoint}/openai/deployments/{deployment}/images/generations?api-version={version}
+		$url = AzureOpenAiProvider::deploymentUrl( $this->getDeploymentId(), 'images/generations' );
 
 		$request = new Request(
 			HttpMethodEnum::POST(),

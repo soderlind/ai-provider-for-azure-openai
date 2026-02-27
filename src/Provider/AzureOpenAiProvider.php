@@ -20,6 +20,8 @@ use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use WordPress\AzureOpenAiAiProvider\Metadata\AzureOpenAiModelMetadataDirectory;
 use WordPress\AzureOpenAiAiProvider\Models\AzureOpenAiTextGenerationModel;
 use WordPress\AzureOpenAiAiProvider\Models\AzureOpenAiImageGenerationModel;
+use WordPress\AzureOpenAiAiProvider\Models\AzureOpenAiEmbeddingModel;
+use WordPress\AzureOpenAiAiProvider\Models\AzureOpenAiTextToSpeechModel;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 /**
@@ -110,6 +112,12 @@ class AzureOpenAiProvider extends AbstractApiProvider {
 			}
 			if ( $capability->isImageGeneration() ) {
 				return new AzureOpenAiImageGenerationModel( $model_metadata, $provider_metadata );
+			}
+			if ( $capability->isEmbeddingGeneration() ) {
+				return new AzureOpenAiEmbeddingModel( $model_metadata, $provider_metadata );
+			}
+			if ( $capability->isTextToSpeechConversion() ) {
+				return new AzureOpenAiTextToSpeechModel( $model_metadata, $provider_metadata );
 			}
 		}
 

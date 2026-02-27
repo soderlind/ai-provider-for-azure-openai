@@ -59,11 +59,11 @@ class AzureApiKeyRequestAuthentication_Test extends AzureOpenAiTestCase {
 		$schema = AzureApiKeyRequestAuthentication::getJsonSchema();
 
 		$this->assertIsArray( $schema );
-		$this->assertSame( 'object', $schema['type'] );
+		$this->assertSame( 'object', $schema[ 'type' ] );
 		$this->assertArrayHasKey( 'properties', $schema );
-		$this->assertArrayHasKey( 'apiKey', $schema['properties'] );
-		$this->assertSame( 'string', $schema['properties']['apiKey']['type'] );
-		$this->assertContains( 'apiKey', $schema['required'] );
+		$this->assertArrayHasKey( 'apiKey', $schema[ 'properties' ] );
+		$this->assertSame( 'string', $schema[ 'properties' ][ 'apiKey' ][ 'type' ] );
+		$this->assertContains( 'apiKey', $schema[ 'required' ] );
 	}
 
 	/**
@@ -103,7 +103,7 @@ class AzureApiKeyRequestAuthentication_Test extends AzureOpenAiTestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'apiKey', $result );
-		$this->assertSame( $api_key, $result['apiKey'] );
+		$this->assertSame( $api_key, $result[ 'apiKey' ] );
 	}
 
 	/**

@@ -54,34 +54,34 @@ abstract class AzureOpenAiTestCase extends \PHPUnit\Framework\TestCase {
 		// Translation functions - return input unchanged.
 		Monkey\Functions\stubs(
 			array(
-				'__'            => static function ( $text, $domain = 'default' ) {
+				'__'           => static function ( $text, $domain = 'default' ) {
 					return $text;
 				},
-				'_e'            => static function ( $text, $domain = 'default' ) {
+				'_e'           => static function ( $text, $domain = 'default' ) {
 					echo $text;
 				},
-				'esc_html__'    => static function ( $text, $domain = 'default' ) {
+				'esc_html__'   => static function ( $text, $domain = 'default' ) {
 					return $text;
 				},
-				'esc_html_e'    => static function ( $text, $domain = 'default' ) {
+				'esc_html_e'   => static function ( $text, $domain = 'default' ) {
 					echo $text;
 				},
-				'esc_attr__'    => static function ( $text, $domain = 'default' ) {
+				'esc_attr__'   => static function ( $text, $domain = 'default' ) {
 					return $text;
 				},
-				'esc_html'      => static function ( $text ) {
+				'esc_html'     => static function ( $text ) {
 					return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
 				},
-				'esc_attr'      => static function ( $text ) {
+				'esc_attr'     => static function ( $text ) {
 					return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
 				},
-				'esc_url'       => static function ( $url ) {
+				'esc_url'      => static function ( $url ) {
 					return filter_var( $url, FILTER_SANITIZE_URL );
 				},
-				'esc_url_raw'   => static function ( $url ) {
+				'esc_url_raw'  => static function ( $url ) {
 					return filter_var( $url, FILTER_SANITIZE_URL );
 				},
-				'wp_kses_post'  => static function ( $data ) {
+				'wp_kses_post' => static function ( $data ) {
 					return $data;
 				},
 			)
@@ -106,7 +106,7 @@ abstract class AzureOpenAiTestCase extends \PHPUnit\Framework\TestCase {
 	 * @return void
 	 */
 	protected function reset_settings_manager_singleton(): void {
-		$reflection = new \ReflectionClass( \WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager::class );
+		$reflection = new \ReflectionClass( \WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager::class);
 		$property   = $reflection->getProperty( 'instance' );
 		$property->setAccessible( true );
 		$property->setValue( null, null );

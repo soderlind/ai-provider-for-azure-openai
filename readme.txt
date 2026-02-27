@@ -1,6 +1,6 @@
 === AI Provider for Azure OpenAI ===
 Contributors: PerS
-Tags: ai, azure, openai, artificial intelligence, machine learning
+Tags: ai, azure, openai, gpt, artificial-intelligence,  connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
@@ -86,7 +86,7 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Screenshots ==
 
-1. Settings page for configuring Azure OpenAI credentials
+1. Settings page for configuring Azure OpenAI.
 
 == Changelog ==
 

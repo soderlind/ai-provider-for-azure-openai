@@ -66,11 +66,22 @@ class Settings_Manager {
 	private function __construct() {}
 
 	/**
-	 * Initialize settings registration.
+	 * Initialize settings - hooks into admin_menu and admin_init.
 	 *
 	 * @return void
 	 */
 	public function init(): void {
+		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_notices', array( $this, 'maybe_show_missing_settings_notice' ) );
+	}
+
+	/**
+	 * Register settings, sections, and fields.
+	 *
+	 * @return void
+	 */
+	public function register_settings(): void {
 		register_setting(
 			self::OPTION_GROUP,
 			self::OPTION_NAME,
@@ -83,7 +94,7 @@ class Settings_Manager {
 
 		add_settings_section(
 			'azure_openai_credentials',
-			__( 'Azure OpenAI Credentials', 'ai-provider-for-azure-openai' ),
+			'',
 			array( $this, 'render_section_description' ),
 			self::PAGE_SLUG
 		);
@@ -92,35 +103,11 @@ class Settings_Manager {
 	}
 
 	/**
-	 * Add settings page to admin menu.
-	 *
-	 * @return void
-	 */
-	public function add_settings_page(): void {
-		add_options_page(
-			__( 'Azure OpenAI Settings', 'ai-provider-for-azure-openai' ),
-			__( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
-			'manage_options',
-			self::PAGE_SLUG,
-			array( $this, 'render_settings_page' )
-		);
-	}
-
-	/**
 	 * Add settings fields.
 	 *
 	 * @return void
 	 */
 	private function add_settings_fields(): void {
-		add_settings_field(
-			'azure_openai_api_key',
-			__( 'API Key', 'ai-provider-for-azure-openai' ),
-			array( $this, 'render_api_key_field' ),
-			self::PAGE_SLUG,
-			'azure_openai_credentials',
-			array( 'label_for' => 'azure_openai_api_key' )
-		);
-
 		add_settings_field(
 			'azure_openai_endpoint',
 			__( 'Endpoint URL', 'ai-provider-for-azure-openai' ),
@@ -138,6 +125,23 @@ class Settings_Manager {
 			'azure_openai_credentials',
 			array( 'label_for' => 'azure_openai_api_version' )
 		);
+
+		add_settings_field(
+			'azure_openai_deployment_id',
+			__( 'Deployment ID', 'ai-provider-for-azure-openai' ),
+			array( $this, 'render_deployment_id_field' ),
+			self::PAGE_SLUG,
+			'azure_openai_credentials',
+			array( 'label_for' => 'azure_openai_deployment_id' )
+		);
+
+		add_settings_field(
+			'azure_openai_capabilities',
+			__( 'Capabilities', 'ai-provider-for-azure-openai' ),
+			array( $this, 'render_capabilities_field' ),
+			self::PAGE_SLUG,
+			'azure_openai_credentials'
+		);
 	}
 
 	/**
@@ -150,25 +154,6 @@ class Settings_Manager {
 			$this->settings = get_option( self::OPTION_NAME, array() );
 		}
 		return $this->settings;
-	}
-
-	/**
-	 * Get the API key with environment variable fallback.
-	 *
-	 * @return string The API key.
-	 */
-	public function get_api_key(): string {
-		$settings = $this->get_settings();
-		$value    = $settings[ 'api_key' ] ?? '';
-
-		if ( empty( $value ) ) {
-			$env_value = getenv( 'AZURE_OPENAI_API_KEY' );
-			if ( false !== $env_value && '' !== $env_value ) {
-				$value = $env_value;
-			}
-		}
-
-		return $value;
 	}
 
 	/**
@@ -215,12 +200,110 @@ class Settings_Manager {
 	}
 
 	/**
+	 * Get the deployment ID with environment variable fallback.
+	 *
+	 * @return string The deployment ID.
+	 */
+	public function get_deployment_id(): string {
+		$settings = $this->get_settings();
+		$value    = $settings[ 'deployment_id' ] ?? '';
+
+		if ( empty( $value ) ) {
+			$env_value = getenv( 'AZURE_OPENAI_DEPLOYMENT_ID' );
+			if ( false !== $env_value && '' !== $env_value ) {
+				$value = $env_value;
+			}
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Get the capabilities setting.
+	 *
+	 * @return array The enabled capabilities.
+	 */
+	public function get_capabilities(): array {
+		$settings = $this->get_settings();
+		$value    = $settings[ 'capabilities' ] ?? array();
+
+		// Default to text_generation + chat_history if not set.
+		if ( empty( $value ) ) {
+			$value = array( 'text_generation', 'chat_history' );
+		}
+
+		return $value;
+	}
+
+	/**
 	 * Check if all required settings are configured.
 	 *
 	 * @return bool True if configured.
 	 */
 	public function is_configured(): bool {
-		return ! empty( $this->get_api_key() ) && ! empty( $this->get_endpoint() );
+		return ! empty( $this->get_endpoint() );
+	}
+
+	/**
+	 * Get a list of missing required settings.
+	 *
+	 * @return array<string> Human-readable labels of missing settings.
+	 */
+	public function get_missing_settings(): array {
+		$missing = array();
+
+		if ( empty( $this->get_endpoint() ) ) {
+			$missing[] = __( 'Endpoint URL', 'ai-provider-for-azure-openai' );
+		}
+
+		// Check for API key in wp-ai-client credentials or env.
+		$credentials = get_option( 'wp_ai_client_provider_credentials', array() );
+		$api_key     = $credentials[ 'azure-openai' ] ?? '';
+		if ( empty( $api_key ) ) {
+			$env_key = getenv( 'AZURE_OPENAI_API_KEY' );
+			if ( false === $env_key || '' === $env_key ) {
+				$missing[] = __( 'API Key (set in AI Client settings)', 'ai-provider-for-azure-openai' );
+			}
+		}
+
+		return $missing;
+	}
+
+	/**
+	 * Show an admin notice when required settings are missing.
+	 *
+	 * Only displays to users who can manage options and only on admin pages
+	 * (not on the plugin's own settings page, where the fields are visible).
+	 *
+	 * @return void
+	 */
+	public function maybe_show_missing_settings_notice(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Don't show on our own settings page — the fields are right there.
+		$screen = get_current_screen();
+		if ( $screen && 'settings_page_' . self::PAGE_SLUG === $screen->id ) {
+			return;
+		}
+
+		$missing = $this->get_missing_settings();
+
+		if ( empty( $missing ) ) {
+			return;
+		}
+
+		$settings_url = admin_url( 'options-general.php?page=' . self::PAGE_SLUG );
+
+		printf(
+			'<div class="notice notice-warning"><p><strong>%s</strong> %s %s <a href="%s">%s</a></p></div>',
+			esc_html__( 'AI Provider for Azure OpenAI:', 'ai-provider-for-azure-openai' ),
+			esc_html__( 'Missing required settings —', 'ai-provider-for-azure-openai' ),
+			esc_html( implode( ', ', $missing ) ) . '.',
+			esc_url( $settings_url ),
+			esc_html__( 'Configure now', 'ai-provider-for-azure-openai' )
+		);
 	}
 
 	/**
@@ -232,10 +315,6 @@ class Settings_Manager {
 	public function sanitize_settings( $input ): array {
 		$sanitized = array();
 
-		if ( isset( $input[ 'api_key' ] ) ) {
-			$sanitized[ 'api_key' ] = sanitize_text_field( $input[ 'api_key' ] );
-		}
-
 		if ( isset( $input[ 'endpoint' ] ) ) {
 			$sanitized[ 'endpoint' ] = esc_url_raw( $input[ 'endpoint' ] );
 		}
@@ -244,10 +323,37 @@ class Settings_Manager {
 			$sanitized[ 'api_version' ] = sanitize_text_field( $input[ 'api_version' ] );
 		}
 
+		if ( isset( $input[ 'deployment_id' ] ) ) {
+			$sanitized[ 'deployment_id' ] = sanitize_text_field( $input[ 'deployment_id' ] );
+		}
+
+		// Sanitize capabilities (array of checkbox values).
+		if ( isset( $input[ 'capabilities' ] ) && is_array( $input[ 'capabilities' ] ) ) {
+			$allowed                   = array( 'text_generation', 'image_generation', 'chat_history', 'embedding_generation', 'text_to_speech_conversion' );
+			$sanitized[ 'capabilities' ] = array_intersect( $input[ 'capabilities' ], $allowed );
+		} else {
+			$sanitized[ 'capabilities' ] = array();
+		}
+
 		// Clear cached settings.
 		$this->settings = null;
 
 		return $sanitized;
+	}
+
+	/**
+	 * Add settings page to admin menu.
+	 *
+	 * @return void
+	 */
+	public function add_settings_page(): void {
+		add_options_page(
+			__( 'Azure OpenAI Provider', 'ai-provider-for-azure-openai' ),
+			__( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
+			'manage_options',
+			self::PAGE_SLUG,
+			array( $this, 'render_settings_page' )
+		);
 	}
 
 	/**
@@ -283,6 +389,20 @@ class Settings_Manager {
 				submit_button( __( 'Save Settings', 'ai-provider-for-azure-openai' ) );
 				?>
 			</form>
+
+			<hr />
+			<h2><?php esc_html_e( 'API Key', 'ai-provider-for-azure-openai' ); ?></h2>
+			<p>
+				<?php
+				printf(
+					/* translators: %s: link to wp-ai-client settings */
+					esc_html__( 'The API key is configured in the %s settings page.', 'ai-provider-for-azure-openai' ),
+					'<a href="' . esc_url( admin_url( 'options-general.php?page=wp-ai-client' ) ) . '">' .
+					esc_html__( 'AI Client', 'ai-provider-for-azure-openai' ) .
+					'</a>'
+				);
+				?>
+			</p>
 		</div>
 		<?php
 	}
@@ -298,7 +418,7 @@ class Settings_Manager {
 			<?php
 			printf(
 				/* translators: %s: Azure Portal URL */
-				esc_html__( 'Configure your Azure OpenAI credentials. You can get these from the %s.', 'ai-provider-for-azure-openai' ),
+				esc_html__( 'Configure your Azure OpenAI settings. You can get these from the %s.', 'ai-provider-for-azure-openai' ),
 				'<a href="https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI" target="_blank" rel="noopener noreferrer">' .
 				esc_html__( 'Azure Portal', 'ai-provider-for-azure-openai' ) .
 				'</a>'
@@ -306,36 +426,9 @@ class Settings_Manager {
 			?>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'Settings can also be configured via environment variables: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_VERSION', 'ai-provider-for-azure-openai' ); ?>
+			<?php esc_html_e( 'Settings can also be configured via environment variables: AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_DEPLOYMENT_ID', 'ai-provider-for-azure-openai' ); ?>
 		</p>
 		<?php
-	}
-
-	/**
-	 * Render the API key field.
-	 *
-	 * @return void
-	 */
-	public function render_api_key_field(): void {
-		$settings   = $this->get_settings();
-		$value      = $settings[ 'api_key' ] ?? '';
-		$has_env    = false !== getenv( 'AZURE_OPENAI_API_KEY' ) && '' !== getenv( 'AZURE_OPENAI_API_KEY' );
-		$show_value = ! empty( $value ) ? str_repeat( '*', 20 ) . substr( $value, -4 ) : '';
-
-		?>
-		<input type="password" id="azure_openai_api_key" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[api_key]"
-			value="<?php echo esc_attr( $value ); ?>" class="regular-text" autocomplete="off" />
-		<?php if ( $has_env && empty( $value ) ) : ?>
-			<p class="description">
-				<span class="dashicons dashicons-yes-alt" style="color: green;"></span>
-				<?php esc_html_e( 'Using value from AZURE_OPENAI_API_KEY environment variable.', 'ai-provider-for-azure-openai' ); ?>
-			</p>
-		<?php else : ?>
-			<p class="description">
-				<?php esc_html_e( 'Your Azure OpenAI API key. Found in Azure Portal under your OpenAI resource > Keys and Endpoint.', 'ai-provider-for-azure-openai' ); ?>
-			</p>
-		<?php endif; ?>
-	<?php
 	}
 
 	/**
@@ -399,5 +492,63 @@ class Settings_Manager {
 			</p>
 		<?php endif; ?>
 	<?php
+	}
+
+	/**
+	 * Render the deployment ID field.
+	 *
+	 * @return void
+	 */
+	public function render_deployment_id_field(): void {
+		$settings = $this->get_settings();
+		$value    = $settings[ 'deployment_id' ] ?? '';
+		$has_env  = false !== getenv( 'AZURE_OPENAI_DEPLOYMENT_ID' ) && '' !== getenv( 'AZURE_OPENAI_DEPLOYMENT_ID' );
+
+		?>
+		<input type="text" id="azure_openai_deployment_id" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[deployment_id]"
+			value="<?php echo esc_attr( $value ); ?>" class="regular-text" placeholder="gpt-4o" />
+		<?php if ( $has_env && empty( $value ) ) : ?>
+			<p class="description">
+				<span class="dashicons dashicons-yes-alt" style="color: green;"></span>
+				<?php esc_html_e( 'Using value from AZURE_OPENAI_DEPLOYMENT_ID environment variable.', 'ai-provider-for-azure-openai' ); ?>
+			</p>
+		<?php else : ?>
+			<p class="description">
+				<?php esc_html_e( 'The name of your Azure OpenAI deployment (e.g., gpt-4o, my-gpt-deployment). This is the deployment name you created in Azure Portal.', 'ai-provider-for-azure-openai' ); ?>
+			</p>
+		<?php endif; ?>
+	<?php
+	}
+
+	/**
+	 * Render the capabilities field.
+	 *
+	 * @return void
+	 */
+	public function render_capabilities_field(): void {
+		$capabilities = $this->get_capabilities();
+
+		$options = array(
+			'text_generation'           => __( 'Text Generation (GPT models)', 'ai-provider-for-azure-openai' ),
+			'chat_history'              => __( 'Chat History (conversation context)', 'ai-provider-for-azure-openai' ),
+			'image_generation'          => __( 'Image Generation (DALL-E models)', 'ai-provider-for-azure-openai' ),
+			'embedding_generation'      => __( 'Embedding Generation (text-embedding models)', 'ai-provider-for-azure-openai' ),
+			'text_to_speech_conversion' => __( 'Text-to-Speech (tts-1, tts-1-hd models)', 'ai-provider-for-azure-openai' ),
+		);
+
+		?>
+		<fieldset>
+			<?php foreach ( $options as $key => $label ) : ?>
+				<label>
+					<input type="checkbox" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[capabilities][]"
+						value="<?php echo esc_attr( $key ); ?>" <?php checked( in_array( $key, $capabilities, true ) ); ?> />
+					<?php echo esc_html( $label ); ?>
+				</label><br />
+			<?php endforeach; ?>
+		</fieldset>
+		<p class="description">
+			<?php esc_html_e( 'Select the capabilities supported by your Azure OpenAI deployment. This depends on the model deployed (e.g., GPT-4 supports text generation, DALL-E supports image generation).', 'ai-provider-for-azure-openai' ); ?>
+		</p>
+		<?php
 	}
 }
