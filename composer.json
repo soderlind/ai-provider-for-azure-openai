@@ -1,0 +1,51 @@
+{
+	"name": "wordpress/ai-provider-for-azure-openai",
+	"description": "AI Provider for Azure OpenAI for the WordPress AI Client.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"homepage": "https://github.com/WordPress/ai-provider-for-azure-openai",
+	"authors": [
+		{
+			"name": "WordPress AI Team",
+			"homepage": "https://make.wordpress.org/ai/"
+		}
+	],
+	"require": {
+		"php": ">=7.4"
+	},
+	"suggest": {
+		"wordpress/php-ai-client": "Required. The core PHP AI Client SDK that this provider extends."
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"wp-coding-standards/wpcs": "^3.0",
+		"phpcompatibility/php-compatibility": "^9.0",
+		"yoast/phpunit-polyfills": "^2.0",
+		"phpunit/phpunit": "^9.0",
+		"brain/monkey": "^2.6",
+		"mockery/mockery": "^1.6",
+		"wordpress/php-ai-client": "dev-trunk"
+	},
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/WordPress/php-ai-client"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"WordPress\\AzureOpenAiAiProvider\\": "src/"
+		}
+	},
+	"scripts": {
+		"lint:php": "phpcs -p",
+		"fix:php": "phpcbf -p",
+		"test": "phpunit"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true,
+			"php-http/discovery": true
+		}
+	}
+}
