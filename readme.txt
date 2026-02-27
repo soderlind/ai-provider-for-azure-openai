@@ -1,6 +1,6 @@
 === AI Provider for Azure OpenAI ===
 Contributors: PerS
-Tags: ai, azure, openai, gpt, artificial-intelligence,  connector
+Tags: ai, azure, openai, gpt, artificial-intelligence, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
@@ -12,15 +12,16 @@ AI Provider for Azure OpenAI for the WordPress AI Client.
 
 == Description ==
 
-This plugin provides Azure OpenAI integration for the WordPress AI Client, enabling text and image generation using Azure's hosted OpenAI models.
+This plugin provides Azure OpenAI integration for the WordPress AI Client, enabling text generation, image generation, embedding generation, and text-to-speech using Azure's hosted OpenAI models.
 
 **Features:**
 
-* Text generation using GPT-4, GPT-4o, GPT-3.5-Turbo deployments
+* Text generation using GPT-4, GPT-4o, GPT-4.1, GPT-3.5-Turbo deployments
 * Image generation using DALL-E 2 and DALL-E 3 deployments
+* Embedding generation using text-embedding-ada-002, text-embedding-3-small/large deployments
+* Text-to-speech using tts-1 and tts-1-hd deployments
 * Settings page for easy configuration
 * Environment variable support for credentials
-* Automatic deployment discovery from Azure OpenAI resource
 
 **Requirements:**
 
@@ -38,10 +39,12 @@ This plugin provides Azure OpenAI integration for the WordPress AI Client, enabl
 **Configuration via Settings Page:**
 
 1. Go to Settings → Azure OpenAI
-2. Enter your API Key (from Azure Portal → Your OpenAI Resource → Keys and Endpoint)
-3. Enter your Endpoint URL (e.g., `https://your-resource.openai.azure.com`)
-4. Optionally set the API Version (defaults to `2024-02-15-preview`)
-5. Save settings
+2. Enter your Endpoint URL (e.g., `https://your-resource.openai.azure.com`)
+3. Optionally set the API Version (defaults to `2024-02-15-preview`)
+4. Enter your Deployment ID (the name of your Azure OpenAI deployment, e.g., `gpt-4o`)
+5. Select the Capabilities your deployment supports (text generation, image generation, embedding generation, text-to-speech)
+6. Save settings
+7. Set your API Key in Settings → AI Client under the Azure OpenAI provider credentials (from Azure Portal → Your OpenAI Resource → Keys and Endpoint)
 
 **Configuration via Environment Variables:**
 
@@ -50,8 +53,9 @@ Set the following environment variables:
 * `AZURE_OPENAI_API_KEY` - Your Azure OpenAI API key
 * `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint URL
 * `AZURE_OPENAI_API_VERSION` - (Optional) API version, defaults to `2024-02-15-preview`
+* `AZURE_OPENAI_DEPLOYMENT_ID` - (Optional) Your Azure OpenAI deployment name
 
-Environment variables take precedence only when settings are not saved in the database.
+Environment variables are used as fallbacks when settings are not saved in the database.
 
 == Frequently Asked Questions ==
 
@@ -59,9 +63,11 @@ Environment variables take precedence only when settings are not saved in the da
 
 This provider supports any model deployed to your Azure OpenAI resource, including:
 
-* GPT-4, GPT-4-Turbo, GPT-4o, GPT-4o-mini
+* GPT-4, GPT-4-Turbo, GPT-4o, GPT-4o-mini, GPT-4.1
 * GPT-3.5-Turbo
 * DALL-E 2, DALL-E 3
+* text-embedding-ada-002, text-embedding-3-small, text-embedding-3-large
+* tts-1, tts-1-hd
 
 Note: You must deploy models in Azure Portal before using them with this provider.
 
@@ -94,8 +100,10 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 * Initial release
 * Text generation support (GPT models)
 * Image generation support (DALL-E models)
+* Embedding generation support (text-embedding models)
+* Text-to-speech support (tts-1, tts-1-hd models)
 * Settings page with environment variable fallback
-* Automatic deployment discovery
+* Configurable capabilities per deployment
 
 == Credits ==
 
