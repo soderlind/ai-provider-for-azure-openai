@@ -2,9 +2,6 @@
 /vendor/
 /node_modules/
 
-# Composer
-composer.lock
-
 # IDE
 .idea/
 .vscode/
