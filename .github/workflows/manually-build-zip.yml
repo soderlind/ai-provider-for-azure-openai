@@ -1,4 +1,4 @@
-Iname: Manually Build release zip
+name: Manually Build release zip
 
 on:
   workflow_dispatch:
@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure Composer GitHub auth
+        run: composer config --global github-oauth.github.com ${{ github.token }}
 
       - name: Build plugin
         run: composer install --no-dev --optimize-autoloader
