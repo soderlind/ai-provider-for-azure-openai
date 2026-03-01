@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, artificial-intelligence, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,7 @@ Set the following environment variables:
 * `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint URL
 * `AZURE_OPENAI_API_VERSION` - (Optional) API version, defaults to `2024-02-15-preview`
 * `AZURE_OPENAI_DEPLOYMENT_ID` - (Optional) Your Azure OpenAI deployment name
+* `AZURE_OPENAI_CAPABILITIES` - (Optional) Comma-separated capabilities: `text_generation`, `image_generation`, `chat_history`, `embedding_generation`, `text_to_speech_conversion`
 
 Environment variables are used as fallbacks when settings are not saved in the database.
 
@@ -93,6 +94,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.1.1 =
+* Added environment variable fallback for capabilities (AZURE_OPENAI_CAPABILITIES) — accepts a comma-separated list
+
 = 1.1.0 =
 * Connectors page integration (Settings → Connectors) for API key, endpoint, deployment, and capabilities
 * wp-scripts build pipeline for JavaScript (ESM script module output)
@@ -124,6 +128,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+Capabilities can now be set via the AZURE_OPENAI_CAPABILITIES environment variable.
 
 = 1.1.0 =
 Connectors page integration, multimodal input support, and multiple bug fixes. Settings migrated to individual connector options.

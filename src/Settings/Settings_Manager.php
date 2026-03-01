@@ -128,14 +128,26 @@ class Settings_Manager {
 	}
 
 	/**
-	 * Get the capabilities setting.
+	 * Get the capabilities setting with environment variable fallback.
+	 *
+	 * The environment variable AZURE_OPENAI_CAPABILITIES accepts a comma-separated
+	 * list of capability strings, e.g. "text_generation,chat_history,image_generation".
 	 *
 	 * @return array The enabled capabilities.
 	 */
 	public function get_capabilities(): array {
 		$value = get_option( Connector_Settings::OPTION_CAPABILITIES, array() );
 
-		// Default to text_generation + chat_history if not set.
+		// Fallback to environment variable (comma-separated list).
+		if ( empty( $value ) ) {
+			$env_value = getenv( 'AZURE_OPENAI_CAPABILITIES' );
+			if ( false !== $env_value && '' !== $env_value ) {
+				$value = array_map( 'trim', explode( ',', $env_value ) );
+				$value = Connector_Settings::sanitize_capabilities( $value );
+			}
+		}
+
+		// Default to text_generation + chat_history if still not set.
 		if ( empty( $value ) ) {
 			$value = array( 'text_generation', 'chat_history' );
 		}

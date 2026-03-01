@@ -55,7 +55,10 @@ export AZURE_OPENAI_API_KEY="your-api-key"
 export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
 export AZURE_OPENAI_API_VERSION="2024-02-15-preview"  # Optional
 export AZURE_OPENAI_DEPLOYMENT_ID="gpt-4o"             # Optional
+export AZURE_OPENAI_CAPABILITIES="text_generation,chat_history"  # Optional, comma-separated
 ```
+
+**Available capabilities:** `text_generation`, `image_generation`, `chat_history`, `embedding_generation`, `text_to_speech_conversion`
 
 Environment variables are used as fallbacks when settings are not saved in the database.
 
