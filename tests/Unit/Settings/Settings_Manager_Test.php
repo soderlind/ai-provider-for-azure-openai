@@ -31,6 +31,7 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 		putenv( 'AZURE_OPENAI_ENDPOINT' );
 		putenv( 'AZURE_OPENAI_API_VERSION' );
 		putenv( 'AZURE_OPENAI_DEPLOYMENT_ID' );
+		putenv( 'AZURE_OPENAI_CAPABILITIES' );
 	}
 
 	/**
@@ -195,5 +196,139 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 		$this->assertSame( 'https://db-resource.openai.azure.com', $endpoint );
 
 		$this->clear_env( 'AZURE_OPENAI_ENDPOINT' );
+	}
+
+	// ------------------------------------------------------------------
+	// get_capabilities
+	// ------------------------------------------------------------------
+
+	/**
+	 * Test get_capabilities returns value from connector option.
+	 *
+	 * @return void
+	 */
+	public function test_get_capabilities_from_connector_option(): void {
+		$caps = array( 'text_generation', 'image_generation' );
+
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Connector_Settings::OPTION_CAPABILITIES, array() )
+			->andReturn( $caps );
+
+		$manager = Settings_Manager::get_instance();
+
+		$this->assertSame( $caps, $manager->get_capabilities() );
+	}
+
+	/**
+	 * Test get_capabilities falls back to environment variable.
+	 *
+	 * @return void
+	 */
+	public function test_get_capabilities_falls_back_to_env(): void {
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Connector_Settings::OPTION_CAPABILITIES, array() )
+			->andReturn( array() );
+
+		$this->set_env( 'AZURE_OPENAI_CAPABILITIES', 'text_generation,image_generation,chat_history' );
+
+		$manager = Settings_Manager::get_instance();
+
+		$this->assertSame(
+			array( 'text_generation', 'image_generation', 'chat_history' ),
+			$manager->get_capabilities()
+		);
+
+		$this->clear_env( 'AZURE_OPENAI_CAPABILITIES' );
+	}
+
+	/**
+	 * Test get_capabilities env var filters invalid values.
+	 *
+	 * @return void
+	 */
+	public function test_get_capabilities_env_filters_invalid(): void {
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Connector_Settings::OPTION_CAPABILITIES, array() )
+			->andReturn( array() );
+
+		$this->set_env( 'AZURE_OPENAI_CAPABILITIES', 'text_generation,bogus_cap,chat_history' );
+
+		$manager = Settings_Manager::get_instance();
+
+		$this->assertSame(
+			array( 'text_generation', 'chat_history' ),
+			$manager->get_capabilities()
+		);
+
+		$this->clear_env( 'AZURE_OPENAI_CAPABILITIES' );
+	}
+
+	/**
+	 * Test get_capabilities env var trims whitespace around values.
+	 *
+	 * @return void
+	 */
+	public function test_get_capabilities_env_trims_whitespace(): void {
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Connector_Settings::OPTION_CAPABILITIES, array() )
+			->andReturn( array() );
+
+		$this->set_env( 'AZURE_OPENAI_CAPABILITIES', ' text_generation , chat_history ' );
+
+		$manager = Settings_Manager::get_instance();
+
+		$this->assertSame(
+			array( 'text_generation', 'chat_history' ),
+			$manager->get_capabilities()
+		);
+
+		$this->clear_env( 'AZURE_OPENAI_CAPABILITIES' );
+	}
+
+	/**
+	 * Test get_capabilities returns default when not configured anywhere.
+	 *
+	 * @return void
+	 */
+	public function test_get_capabilities_returns_default(): void {
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Connector_Settings::OPTION_CAPABILITIES, array() )
+			->andReturn( array() );
+
+		$this->clear_env( 'AZURE_OPENAI_CAPABILITIES' );
+
+		$manager = Settings_Manager::get_instance();
+
+		$this->assertSame(
+			array( 'text_generation', 'chat_history' ),
+			$manager->get_capabilities()
+		);
+	}
+
+	/**
+	 * Test get_capabilities DB option takes precedence over env var.
+	 *
+	 * @return void
+	 */
+	public function test_get_capabilities_db_takes_precedence_over_env(): void {
+		$db_caps = array( 'image_generation' );
+
+		Functions\expect( 'get_option' )
+			->once()
+			->with( Connector_Settings::OPTION_CAPABILITIES, array() )
+			->andReturn( $db_caps );
+
+		$this->set_env( 'AZURE_OPENAI_CAPABILITIES', 'text_generation,chat_history' );
+
+		$manager = Settings_Manager::get_instance();
+
+		$this->assertSame( $db_caps, $manager->get_capabilities() );
+
+		$this->clear_env( 'AZURE_OPENAI_CAPABILITIES' );
 	}
 }

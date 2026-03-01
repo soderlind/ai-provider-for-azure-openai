@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.1
+
+### Added
+
+- Environment variable fallback for capabilities (`AZURE_OPENAI_CAPABILITIES`) — accepts a comma-separated list (e.g. `text_generation,chat_history`)
+
 ## 1.1.0
 
 ### Added
