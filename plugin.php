@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -17,9 +17,9 @@
 namespace WordPress\AzureOpenAiAiProvider;
 
 use WordPress\AiClient\AiClient;
-use WordPress\AiClient\Providers\Http\HttpTransporterFactory;
 use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
 use WordPress\AzureOpenAiAiProvider\Http\AzureApiKeyRequestAuthentication;
+use WordPress\AzureOpenAiAiProvider\Settings\Connector_Settings;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,28 +27,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.0.0' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.1.0' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
 // Load autoloader.
 require_once __DIR__ . '/src/autoload.php';
-
-/**
- * Check whether the AI Experiments plugin is active.
- *
- * Used to conditionally apply workarounds for SDK incompatibilities
- * introduced by the AI Experiments plugin's Jetpack autoloader, which
- * overrides core's ~0.4.x SDK with its bundled v0.3.1 copy.
- *
- * @see docs/ai-experiments-bugs.md
- *
- * @return bool True when the AI Experiments plugin is active.
- */
-function is_ai_experiments_active(): bool {
-	$active_plugins = (array) get_option( 'active_plugins', array() );
-	return in_array( 'ai/ai.php', $active_plugins, true );
-}
 
 /**
  * Register the Azure OpenAI provider with the AI Client.
@@ -57,35 +41,14 @@ function is_ai_experiments_active(): bool {
  * @return void
  */
 function register_provider(): void {
-	if ( ! class_exists( AiClient::class) ) {
+	if ( ! class_exists( AiClient::class ) ) {
 		return;
 	}
 
 	$registry = AiClient::defaultRegistry();
 
-	/*
-	 * Workaround: AI Experiments plugin ships SDK v0.3.1 via Jetpack
-	 * autoloader, whose ProviderRegistry::registerProvider() does not
-	 * auto-discover the HTTP transporter (core ~0.4.x does).
-	 *
-	 * @see docs/ai-experiments-bugs.md — Issue #3
-	 */
-	if ( is_ai_experiments_active() ) {
-		try {
-			$registry->getHttpTransporter();
-		} catch (\RuntimeException $e) {
-			try {
-				$registry->setHttpTransporter(
-					HttpTransporterFactory::createTransporter()
-				);
-			} catch (\Throwable $e) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
-				// Discovery not yet available; transporter will be set later by core.
-			}
-		}
-	}
-
-	if ( ! $registry->hasProvider( AzureOpenAiProvider::class) ) {
-		$registry->registerProvider( AzureOpenAiProvider::class);
+	if ( ! $registry->hasProvider( AzureOpenAiProvider::class ) ) {
+		$registry->registerProvider( AzureOpenAiProvider::class );
 	}
 }
 // Register provider early so wp-ai-client detects it for settings page.
@@ -94,18 +57,17 @@ add_action( 'init', __NAMESPACE__ . '\\register_provider', 5 );
 /**
  * Set up Azure-specific authentication after wp-ai-client has loaded credentials.
  *
+ * Reads the connector option (unmasked) with environment variable fallback.
+ *
  * @return void
  */
 function setup_authentication(): void {
-	if ( ! class_exists( AiClient::class) ) {
+	if ( ! class_exists( AiClient::class ) ) {
 		return;
 	}
 
 	$registry = AiClient::defaultRegistry();
-
-	// Get API key from wp-ai-client's credential storage.
-	$credentials = get_option( 'wp_ai_client_provider_credentials', array() );
-	$api_key     = $credentials[ 'azure-openai' ] ?? '';
+	$api_key  = Connector_Settings::get_real_api_key();
 
 	// Fallback to environment variable.
 	if ( empty( $api_key ) ) {
@@ -135,3 +97,91 @@ function init_settings(): void {
 	Settings_Manager::get_instance()->init();
 }
 add_action( 'plugins_loaded', __NAMESPACE__ . '\\init_settings' );
+
+/**
+ * Register the connector JavaScript module on the Connectors admin page.
+ *
+ * Uses the script module system so the browser can resolve @wordpress/* imports
+ * via the import map that WP 7.0 emits.
+ *
+ * @return void
+ */
+function register_connector_module(): void {
+	/*
+	 * Only @wordpress/connectors is a script module in WP 7.0.
+	 * The remaining dependencies (api-fetch, element, i18n, components)
+	 * are classic scripts loaded via the boot system prerequisites,
+	 * so they are accessed from window.wp.* in the JS file.
+	 */
+	wp_register_script_module(
+		'ai-provider-for-azure-openai/connectors',
+		plugins_url( 'build/connectors.js', AZURE_OPENAI_PROVIDER_FILE ),
+		array(
+			array(
+				'id'     => '@wordpress/connectors',
+				'import' => 'dynamic',
+			),
+		),
+		AZURE_OPENAI_PROVIDER_VERSION
+	);
+}
+add_action( 'init', __NAMESPACE__ . '\\register_connector_module' );
+
+/**
+ * Enqueue the connector module on the Connectors admin page.
+ *
+ * The 'connectors-wp-admin_init' action fires only when the Connectors page
+ * is being rendered, so this is the correct place to enqueue.
+ *
+ * @return void
+ */
+function enqueue_connector_module(): void {
+	wp_enqueue_script_module( 'ai-provider-for-azure-openai/connectors' );
+}
+add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
+
+/**
+ * Run one-time migration from legacy settings to connector options.
+ *
+ * Migrates:
+ *  - Serialized Settings_Manager options → individual connector options.
+ *  - wp_ai_client_provider_credentials['azure-openai'] → connector API key option.
+ *
+ * @return void
+ */
+function maybe_migrate_settings(): void {
+	$migrated_key = 'azure_openai_connector_migrated';
+
+	if ( get_option( $migrated_key ) ) {
+		return;
+	}
+
+	// Migrate legacy serialized settings.
+	$legacy = get_option( Settings_Manager::OPTION_NAME, array() );
+
+	if ( ! empty( $legacy ) ) {
+		if ( ! empty( $legacy['endpoint'] ) && ! get_option( Connector_Settings::OPTION_ENDPOINT ) ) {
+			update_option( Connector_Settings::OPTION_ENDPOINT, $legacy['endpoint'] );
+		}
+		if ( ! empty( $legacy['api_version'] ) && ! get_option( Connector_Settings::OPTION_API_VERSION ) ) {
+			update_option( Connector_Settings::OPTION_API_VERSION, $legacy['api_version'] );
+		}
+		if ( ! empty( $legacy['deployment_id'] ) && ! get_option( Connector_Settings::OPTION_DEPLOYMENT_ID ) ) {
+			update_option( Connector_Settings::OPTION_DEPLOYMENT_ID, $legacy['deployment_id'] );
+		}
+		if ( ! empty( $legacy['capabilities'] ) && ! get_option( Connector_Settings::OPTION_CAPABILITIES ) ) {
+			update_option( Connector_Settings::OPTION_CAPABILITIES, $legacy['capabilities'] );
+		}
+	}
+
+	// Migrate API key from wp-ai-client credentials.
+	$credentials = get_option( 'wp_ai_client_provider_credentials', array() );
+	$api_key     = $credentials['azure-openai'] ?? '';
+
+	if ( ! empty( $api_key ) && ! get_option( Connector_Settings::OPTION_API_KEY ) ) {
+		update_option( Connector_Settings::OPTION_API_KEY, $api_key );
+	}
+
+	update_option( $migrated_key, true );
+}
+add_action( 'admin_init', __NAMESPACE__ . '\\maybe_migrate_settings' );

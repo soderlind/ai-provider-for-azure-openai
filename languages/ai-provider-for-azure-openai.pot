@@ -1,0 +1,186 @@
+# Copyright (C) 2026 Per Soderlind
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: AI Provider for Azure OpenAI 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ai-provider-for-azure-openai\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-03-01T15:43:40+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: ai-provider-for-azure-openai\n"
+
+#. Plugin Name of the plugin
+#: plugin.php
+msgid "AI Provider for Azure OpenAI"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: plugin.php
+msgid "https://github.com/soderlind/ai-provider-for-azure-openai"
+msgstr ""
+
+#. Description of the plugin
+#: plugin.php
+msgid "AI Provider for Azure OpenAI for the WordPress AI Client."
+msgstr ""
+
+#. Author of the plugin
+#: plugin.php
+msgid "Per Soderlind"
+msgstr ""
+
+#. Author URI of the plugin
+#: plugin.php
+msgid "https://soderlind.no"
+msgstr ""
+
+#: src/Http/AzureApiKeyRequestAuthentication.php:58
+#: src/js/connectors.js:290
+msgid "API Key"
+msgstr ""
+
+#: src/Http/AzureApiKeyRequestAuthentication.php:59
+msgid "Your Azure OpenAI API key."
+msgstr ""
+
+#. translators: %s: model ID
+#: src/Provider/AzureOpenAiProvider.php:127
+#, php-format
+msgid "Unsupported model capabilities for model: %s"
+msgstr ""
+
+#: src/Provider/AzureOpenAiProvider.php:141
+#: src/js/connectors.js:412
+msgid "Azure OpenAI"
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:61
+msgid "Azure OpenAI API Key"
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:62
+msgid "API key for the Azure OpenAI AI provider."
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:76
+msgid "Azure OpenAI Endpoint URL"
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:77
+msgid "Your Azure OpenAI endpoint URL (e.g., https://your-resource.openai.azure.com)."
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:90
+msgid "Azure OpenAI API Version"
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:91
+msgid "Azure OpenAI API version string."
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:104
+msgid "Azure OpenAI Deployment ID"
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:105
+#: src/js/connectors.js:340
+msgid "The name of your Azure OpenAI deployment."
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:118
+msgid "Azure OpenAI Capabilities"
+msgstr ""
+
+#: src/Settings/Connector_Settings.php:119
+msgid "Capabilities supported by the Azure OpenAI deployment."
+msgstr ""
+
+#: src/Settings/Settings_Manager.php:164
+#: src/js/connectors.js:311
+msgid "Endpoint URL"
+msgstr ""
+
+#: src/Settings/Settings_Manager.php:172
+msgid "API Key (set in Connectors settings)"
+msgstr ""
+
+#: src/js/connectors.js:50
+msgid "Text Generation (GPT models)"
+msgstr ""
+
+#: src/js/connectors.js:51
+msgid "Chat History (conversation context)"
+msgstr ""
+
+#: src/js/connectors.js:52
+msgid "Image Generation (DALL-E models)"
+msgstr ""
+
+#: src/js/connectors.js:53
+msgid "Embedding Generation"
+msgstr ""
+
+#: src/js/connectors.js:54
+msgid "Text-to-Speech (tts models)"
+msgstr ""
+
+#: src/js/connectors.js:125
+msgid "It was not possible to save the API key."
+msgstr ""
+
+#: src/js/connectors.js:238
+msgid "Settings saved."
+msgstr ""
+
+#: src/js/connectors.js:241
+msgid "Error saving settings."
+msgstr ""
+
+#: src/js/connectors.js:268
+msgid "Edit"
+msgstr ""
+
+#: src/js/connectors.js:269
+msgid "Set Up"
+msgstr ""
+
+#: src/js/connectors.js:303
+msgid "Azure Portal"
+msgstr ""
+
+#: src/js/connectors.js:308
+msgid "Azure OpenAI Settings"
+msgstr ""
+
+#: src/js/connectors.js:315
+msgid "Your Azure OpenAI endpoint URL."
+msgstr ""
+
+#: src/js/connectors.js:323
+msgid "API Version"
+msgstr ""
+
+#: src/js/connectors.js:327
+msgid "Azure OpenAI API version."
+msgstr ""
+
+#: src/js/connectors.js:336
+msgid "Deployment ID"
+msgstr ""
+
+#: src/js/connectors.js:354
+msgid "Capabilities"
+msgstr ""
+
+#: src/js/connectors.js:387
+msgid "Save Settings"
+msgstr ""
+
+#: src/js/connectors.js:413
+msgid "Text, image, and embedding generation with Azure-hosted OpenAI models."
+msgstr ""

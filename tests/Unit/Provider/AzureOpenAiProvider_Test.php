@@ -10,6 +10,7 @@ namespace WordPress\AzureOpenAiAiProvider\Tests\Unit\Provider;
 use AzureOpenAiTestCase;
 use Brain\Monkey\Functions;
 use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
+use WordPress\AzureOpenAiAiProvider\Settings\Connector_Settings;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 /**
@@ -18,20 +19,31 @@ use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 
 	/**
+	 * Stub get_option to return connector option values.
+	 *
+	 * @param array $options Map of option name => value.
+	 * @return void
+	 */
+	private function stub_options( array $options ): void {
+		Functions\when( 'get_option' )->alias(
+			function ( $name, $default = false ) use ( $options ) {
+				return array_key_exists( $name, $options ) ? $options[ $name ] : $default;
+			}
+		);
+	}
+
+	/**
 	 * Test deploymentUrl builds correct Azure URL format.
 	 *
 	 * @return void
 	 */
 	public function test_deployment_url_builds_correct_format(): void {
-		// Mock settings to return test values.
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://my-resource.openai.azure.com',
-					'api_version' => '2024-02-15-preview',
-				)
-			);
+		$this->stub_options(
+			array(
+				Connector_Settings::OPTION_ENDPOINT    => 'https://my-resource.openai.azure.com',
+				Connector_Settings::OPTION_API_VERSION => '2024-02-15-preview',
+			)
+		);
 
 		$url = AzureOpenAiProvider::deploymentUrl( 'gpt-4o', 'chat/completions' );
 
@@ -46,14 +58,12 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_deployment_url_handles_trailing_slash(): void {
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://my-resource.openai.azure.com/',
-					'api_version' => '2024-06-01',
-				)
-			);
+		$this->stub_options(
+			array(
+				Connector_Settings::OPTION_ENDPOINT    => 'https://my-resource.openai.azure.com/',
+				Connector_Settings::OPTION_API_VERSION => '2024-06-01',
+			)
+		);
 
 		$url = AzureOpenAiProvider::deploymentUrl( 'gpt-35-turbo', 'chat/completions' );
 
@@ -68,14 +78,12 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_url_builds_deployments_list_url(): void {
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://test-resource.openai.azure.com',
-					'api_version' => '2024-02-15-preview',
-				)
-			);
+		$this->stub_options(
+			array(
+				Connector_Settings::OPTION_ENDPOINT    => 'https://test-resource.openai.azure.com',
+				Connector_Settings::OPTION_API_VERSION => '2024-02-15-preview',
+			)
+		);
 
 		$url = AzureOpenAiProvider::url( 'deployments' );
 
@@ -90,9 +98,7 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_deployment_url_returns_empty_when_not_configured(): void {
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
+		$this->stub_options( array() );
 
 		$this->clear_env( 'AZURE_OPENAI_ENDPOINT' );
 
@@ -107,14 +113,12 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_deployment_url_works_with_different_paths(): void {
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://my-resource.openai.azure.com',
-					'api_version' => '2024-02-15-preview',
-				)
-			);
+		$this->stub_options(
+			array(
+				Connector_Settings::OPTION_ENDPOINT    => 'https://my-resource.openai.azure.com',
+				Connector_Settings::OPTION_API_VERSION => '2024-02-15-preview',
+			)
+		);
 
 		// Test chat completions.
 		$chat_url = AzureOpenAiProvider::deploymentUrl( 'gpt-4o', 'chat/completions' );
@@ -122,15 +126,6 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 
 		// Reset singleton for next call.
 		$this->reset_settings_manager_singleton();
-
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://my-resource.openai.azure.com',
-					'api_version' => '2024-02-15-preview',
-				)
-			);
 
 		// Test image generations.
 		$image_url = AzureOpenAiProvider::deploymentUrl( 'dall-e-3', 'images/generations' );
@@ -143,14 +138,12 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_api_version_included_in_query_string(): void {
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://my-resource.openai.azure.com',
-					'api_version' => '2024-06-01',
-				)
-			);
+		$this->stub_options(
+			array(
+				Connector_Settings::OPTION_ENDPOINT    => 'https://my-resource.openai.azure.com',
+				Connector_Settings::OPTION_API_VERSION => '2024-06-01',
+			)
+		);
 
 		$url = AzureOpenAiProvider::deploymentUrl( 'gpt-4', 'chat/completions' );
 
@@ -163,14 +156,11 @@ class AzureOpenAiProvider_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_deployment_url_uses_default_api_version(): void {
-		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint' => 'https://my-resource.openai.azure.com',
-					// No api_version set.
-				)
-			);
+		$this->stub_options(
+			array(
+				Connector_Settings::OPTION_ENDPOINT => 'https://my-resource.openai.azure.com',
+			)
+		);
 
 		$this->clear_env( 'AZURE_OPENAI_API_VERSION' );
 

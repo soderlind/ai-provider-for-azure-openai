@@ -19,10 +19,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build JavaScript
+        run: npm run build
+
       - name: Configure Composer GitHub auth
         run: composer config --global github-oauth.github.com ${{ github.token }}
 
-      - name: Build plugin
+      - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
       - name: Stage release files
@@ -36,13 +48,19 @@ jobs:
             --exclude='.phpunit.cache/' \
             --exclude='node_modules/' \
             --exclude='tests/' \
+            --exclude='src/js/' \
             --exclude='composer.json' \
             --exclude='composer.lock' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
+            --exclude='webpack.config.js' \
+            --exclude='i18n-map.json' \
             --exclude='phpunit.xml.dist' \
             --exclude='phpcs.xml' \
             --exclude='README.md' \
             --exclude='.editorconfig' \
             --exclude='vendor/bin/' \
+            --exclude='languages/.gitkeep' \
             . /tmp/ai-provider-for-azure-openai/
 
       - name: Archive Release

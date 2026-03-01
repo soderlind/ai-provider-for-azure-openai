@@ -1,0 +1,30 @@
+{
+	"name": "ai-provider-for-azure-openai",
+	"version": "1.1.0",
+	"private": true,
+	"description": "AI Provider for Azure OpenAI for the WordPress AI Client.",
+	"author": "Per Soderlind",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"lint:js": "wp-scripts lint-js src/js/",
+		"lint:js:fix": "wp-scripts lint-js --fix src/js/",
+		"i18n": "npm run i18n:make-pot && npm run i18n:update-po && npm run i18n:make-mo && npm run i18n:make-json && npm run i18n:make-php",
+		"i18n:make-pot": "wp i18n make-pot . languages/ai-provider-for-azure-openai.pot --exclude=node_modules,vendor,tests,build --domain=ai-provider-for-azure-openai",
+		"i18n:update-po": "wp i18n update-po languages/ai-provider-for-azure-openai.pot languages/",
+		"i18n:make-mo": "wp i18n make-mo languages/",
+		"i18n:make-json": "wp i18n make-json languages/ --no-purge --use-map=i18n-map.json",
+		"i18n:make-php": "wp i18n make-php languages/"
+	},
+	"devDependencies": {
+		"@testing-library/react": "^16.3.0",
+		"@wordpress/scripts": "^31.5.0",
+		"jsdom": "^26.1.0",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"vitest": "^4.0.18"
+	}
+}

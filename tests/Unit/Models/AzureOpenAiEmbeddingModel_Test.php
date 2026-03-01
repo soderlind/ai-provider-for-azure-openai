@@ -10,6 +10,7 @@ namespace WordPress\AzureOpenAiAiProvider\Tests\Unit\Models;
 use AzureOpenAiTestCase;
 use Brain\Monkey\Functions;
 use WordPress\AzureOpenAiAiProvider\Models\AzureOpenAiEmbeddingModel;
+use WordPress\AzureOpenAiAiProvider\Settings\Connector_Settings;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 /**
@@ -24,14 +25,8 @@ class AzureOpenAiEmbeddingModel_Test extends AzureOpenAiTestCase {
 	 */
 	public function test_get_deployment_id_from_settings(): void {
 		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'      => 'https://my-resource.openai.azure.com',
-					'api_version'   => '2024-02-15-preview',
-					'deployment_id' => 'my-embedding-deployment',
-				)
-			);
+			->with( Connector_Settings::OPTION_DEPLOYMENT_ID, '' )
+			->andReturn( 'my-embedding-deployment' );
 
 		$model = $this->createEmbeddingModel( 'text-embedding-3-small' );
 
@@ -48,13 +43,8 @@ class AzureOpenAiEmbeddingModel_Test extends AzureOpenAiTestCase {
 	 */
 	public function test_get_deployment_id_falls_back_to_model_id(): void {
 		Functions\expect( 'get_option' )
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint'    => 'https://my-resource.openai.azure.com',
-					'api_version' => '2024-02-15-preview',
-				)
-			);
+			->with( Connector_Settings::OPTION_DEPLOYMENT_ID, '' )
+			->andReturn( '' );
 
 		$this->clear_env( 'AZURE_OPENAI_DEPLOYMENT_ID' );
 

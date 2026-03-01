@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, artificial-intelligence, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,31 +20,28 @@ This plugin provides Azure OpenAI integration for the WordPress AI Client, enabl
 * Image generation using DALL-E 2 and DALL-E 3 deployments
 * Embedding generation using text-embedding-ada-002, text-embedding-3-small/large deployments
 * Text-to-speech using tts-1 and tts-1-hd deployments
-* Settings page for easy configuration
+* Integrated into the Connectors settings page (Settings → Connectors) — configure API key, endpoint, deployment, and capabilities in one place
 * Environment variable support for credentials
 
 **Requirements:**
 
 * PHP 7.4 or higher
-* When using with WordPress, requires WordPress 7.0 or higher
-  * If using an older WordPress release, the wordpress/php-ai-client package must be installed
+* WordPress 7.0 or higher
 * Azure OpenAI resource with deployed models
 
 == Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/ai-provider-for-azure-openai`, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Configure your Azure OpenAI credentials via Settings → Azure OpenAI, or set environment variables.
+3. Configure your Azure OpenAI credentials (see below).
 
-**Configuration via Settings Page:**
+**Connectors Page:**
 
-1. Go to Settings → Azure OpenAI
-2. Enter your Endpoint URL (e.g., `https://your-resource.openai.azure.com`)
-3. Optionally set the API Version (defaults to `2024-02-15-preview`)
-4. Enter your Deployment ID (the name of your Azure OpenAI deployment, e.g., `gpt-4o`)
-5. Select the Capabilities your deployment supports (text generation, image generation, embedding generation, text-to-speech)
-6. Save settings
-7. Set your API Key in Settings → AI Client under the Azure OpenAI provider credentials (from Azure Portal → Your OpenAI Resource → Keys and Endpoint)
+1. Go to Settings → Connectors
+2. Find "Azure OpenAI" and click **Set Up**
+3. Enter your API Key (from Azure Portal → Your OpenAI Resource → Keys and Endpoint)
+4. Enter your Endpoint URL, API Version, Deployment ID, and Capabilities
+5. Click **Save Settings**
 
 **Configuration via Environment Variables:**
 
@@ -96,6 +93,23 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.1.0 =
+* Connectors page integration (Settings → Connectors) for API key, endpoint, deployment, and capabilities
+* wp-scripts build pipeline for JavaScript (ESM script module output)
+* Vitest test infrastructure for the Connectors JavaScript
+* i18n pipeline (make-pot, update-po, make-mo, make-json, make-php)
+* How-to guide for building custom AI providers (docs/how-to-add-ai-provider.md)
+* Connector icon changed to Gutenberg cloud icon
+* Button labels follow WP core conventions: "Set Up" / "Edit"
+* Added __next40pxDefaultSize and __nextHasNoMarginBottom to all form controls
+* Authentication class now extends ApiKeyRequestAuthentication (fixes SDK type validation)
+* Simplified Settings_Manager with environment variable fallback
+* Removed legacy Settings → Azure OpenAI page
+* Fixed fatal InvalidArgumentException when SDK validated the authentication object type
+* Fixed model discovery reading API key from legacy storage instead of Connector Settings
+* Fixed missing webSearch supported option causing "No models found" error
+* Fixed multimodal input modalities — now declares image, audio, and document combinations so callers using with_file() find matching models
+
 = 1.0.0 =
 * Initial release
 * Text generation support (GPT models)
@@ -110,6 +124,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Connectors page integration, multimodal input support, and multiple bug fixes. Settings migrated to individual connector options.
 
 = 1.0.0 =
 Initial release.

@@ -10,6 +10,7 @@ namespace WordPress\AzureOpenAiAiProvider\Tests\Unit\Settings;
 use AzureOpenAiTestCase;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
+use WordPress\AzureOpenAiAiProvider\Settings\Connector_Settings;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 /**
@@ -45,15 +46,15 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	}
 
 	/**
-	 * Test get_endpoint returns value from settings.
+	 * Test get_endpoint returns value from connector option.
 	 *
 	 * @return void
 	 */
-	public function test_get_endpoint_from_settings(): void {
+	public function test_get_endpoint_from_connector_option(): void {
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array( 'endpoint' => 'https://my-resource.openai.azure.com' ) );
+			->with( Connector_Settings::OPTION_ENDPOINT, '' )
+			->andReturn( 'https://my-resource.openai.azure.com' );
 
 		$manager  = Settings_Manager::get_instance();
 		$endpoint = $manager->get_endpoint();
@@ -69,8 +70,8 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	public function test_get_endpoint_falls_back_to_env(): void {
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
+			->with( Connector_Settings::OPTION_ENDPOINT, '' )
+			->andReturn( '' );
 
 		$this->set_env( 'AZURE_OPENAI_ENDPOINT', 'https://env-resource.openai.azure.com' );
 
@@ -83,15 +84,15 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	}
 
 	/**
-	 * Test get_api_version returns value from settings.
+	 * Test get_api_version returns value from connector option.
 	 *
 	 * @return void
 	 */
-	public function test_get_api_version_from_settings(): void {
+	public function test_get_api_version_from_connector_option(): void {
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array( 'api_version' => '2024-06-01' ) );
+			->with( Connector_Settings::OPTION_API_VERSION, '' )
+			->andReturn( '2024-06-01' );
 
 		$manager     = Settings_Manager::get_instance();
 		$api_version = $manager->get_api_version();
@@ -107,8 +108,8 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	public function test_get_api_version_falls_back_to_env(): void {
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
+			->with( Connector_Settings::OPTION_API_VERSION, '' )
+			->andReturn( '' );
 
 		$this->set_env( 'AZURE_OPENAI_API_VERSION', '2024-03-01' );
 
@@ -128,8 +129,8 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	public function test_get_api_version_returns_default(): void {
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
+			->with( Connector_Settings::OPTION_API_VERSION, '' )
+			->andReturn( '' );
 
 		$this->clear_env( 'AZURE_OPENAI_API_VERSION' );
 
@@ -145,15 +146,10 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	 * @return void
 	 */
 	public function test_is_configured_returns_true_when_configured(): void {
-		// get_settings() caches results, so get_option is only called once.
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn(
-				array(
-					'endpoint' => 'https://test.openai.azure.com',
-				)
-			);
+			->with( Connector_Settings::OPTION_ENDPOINT, '' )
+			->andReturn( 'https://test.openai.azure.com' );
 
 		$manager = Settings_Manager::get_instance();
 
@@ -171,8 +167,8 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array() );
+			->with( Connector_Settings::OPTION_ENDPOINT, '' )
+			->andReturn( '' );
 
 		$manager = Settings_Manager::get_instance();
 
@@ -180,36 +176,15 @@ class Settings_Manager_Test extends AzureOpenAiTestCase {
 	}
 
 	/**
-	 * Test sanitize_settings sanitizes input properly.
-	 *
-	 * @return void
-	 */
-	public function test_sanitize_settings(): void {
-		$manager = Settings_Manager::get_instance();
-
-		$input = array(
-			'endpoint'      => 'https://my-resource.openai.azure.com',
-			'api_version'   => '2024-02-15-preview',
-			'deployment_id' => 'gpt-4o',
-		);
-
-		$sanitized = $manager->sanitize_settings( $input );
-
-		$this->assertSame( 'https://my-resource.openai.azure.com', $sanitized['endpoint'] );
-		$this->assertSame( '2024-02-15-preview', $sanitized['api_version'] );
-		$this->assertSame( 'gpt-4o', $sanitized['deployment_id'] );
-	}
-
-	/**
-	 * Test settings priority: DB settings take precedence over env vars.
+	 * Test settings priority: DB option takes precedence over env vars.
 	 *
 	 * @return void
 	 */
 	public function test_db_settings_take_precedence_over_env(): void {
 		Functions\expect( 'get_option' )
 			->once()
-			->with( Settings_Manager::OPTION_NAME, array() )
-			->andReturn( array( 'endpoint' => 'https://db-resource.openai.azure.com' ) );
+			->with( Connector_Settings::OPTION_ENDPOINT, '' )
+			->andReturn( 'https://db-resource.openai.azure.com' );
 
 		$this->set_env( 'AZURE_OPENAI_ENDPOINT', 'https://env-resource.openai.azure.com' );
 

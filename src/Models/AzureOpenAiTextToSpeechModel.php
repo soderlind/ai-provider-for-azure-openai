@@ -112,8 +112,8 @@ class AzureOpenAiTextToSpeechModel extends AbstractApiBasedModel implements Text
 						}
 					}
 				}
-			} elseif ( is_array( $item ) && isset( $item[ 'content' ] ) ) {
-				$texts[] = $item[ 'content' ];
+			} elseif ( is_array( $item ) && isset( $item['content'] ) ) {
+				$texts[] = $item['content'];
 			}
 		}
 
@@ -138,23 +138,23 @@ class AzureOpenAiTextToSpeechModel extends AbstractApiBasedModel implements Text
 		// Use the voice from config if available.
 		$voice = $config->getOutputSpeechVoice();
 		if ( ! empty( $voice ) && in_array( $voice, self::AVAILABLE_VOICES, true ) ) {
-			$params[ 'voice' ] = $voice;
+			$params['voice'] = $voice;
 		}
 
 		// Allow response format and speed overrides via custom options.
 		$custom = $config->getCustomOptions();
 
-		if ( isset( $custom[ 'response_format' ] ) ) {
-			$params[ 'response_format' ] = sanitize_text_field( $custom[ 'response_format' ] );
+		if ( isset( $custom['response_format'] ) ) {
+			$params['response_format'] = sanitize_text_field( $custom['response_format'] );
 		} else {
-			$params[ 'response_format' ] = self::DEFAULT_RESPONSE_FORMAT;
+			$params['response_format'] = self::DEFAULT_RESPONSE_FORMAT;
 		}
 
 		// Allow speed override (0.25 to 4.0).
-		if ( isset( $custom[ 'speed' ] ) ) {
-			$speed = (float) $custom[ 'speed' ];
+		if ( isset( $custom['speed'] ) ) {
+			$speed = (float) $custom['speed'];
 			if ( $speed >= 0.25 && $speed <= 4.0 ) {
-				$params[ 'speed' ] = $speed;
+				$params['speed'] = $speed;
 			}
 		}
 
@@ -176,9 +176,11 @@ class AzureOpenAiTextToSpeechModel extends AbstractApiBasedModel implements Text
 		// If getData() returns the raw body, base64 encode it for transport.
 		$audio_data = '';
 		if ( is_string( $data ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Encoding audio binary for transport.
 			$audio_data = base64_encode( $data );
-		} elseif ( is_array( $data ) && isset( $data[ 'body' ] ) ) {
-			$audio_data = base64_encode( $data[ 'body' ] );
+		} elseif ( is_array( $data ) && isset( $data['body'] ) ) {
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Encoding audio binary for transport.
+			$audio_data = base64_encode( $data['body'] );
 		}
 
 		return new GenerativeAiResult(
