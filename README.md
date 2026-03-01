@@ -6,6 +6,8 @@ AI Provider for Azure OpenAI for the WordPress AI Client.
 
 This plugin provides Azure OpenAI integration for the WordPress AI Client, enabling text generation, image generation, embedding generation, and text-to-speech using Azure's hosted OpenAI models.
 
+>BONUS: [How to Add a Custom AI Provider to WordPress 7+](https://github.com/soderlind/ai-provider-for-azure-openai/blob/main/docs/how-to-add-ai-provider.md) — a step-by-step guide for developers to build their own AI providers!
+
 ### Features
 
 - Text generation using GPT-4, GPT-4o, GPT-4.1, GPT-3.5-Turbo deployments
