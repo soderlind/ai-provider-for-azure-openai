@@ -12,12 +12,13 @@ This plugin provides Azure OpenAI integration for the WordPress AI Client, enabl
 - Image generation using DALL-E 2 and DALL-E 3 deployments
 - Embedding generation using text-embedding-ada-002, text-embedding-3-small/large deployments
 - Text-to-speech using tts-1 and tts-1-hd deployments
-- Settings page for easy configuration
+- Integrated into the Connectors settings page (Settings → Connectors) — configure API key, endpoint, deployment, and capabilities in one place
+- Multimodal input support (text, image, audio, document combinations)
 - Environment variable support for credentials
 
 ## Requirements
 
-- WordPress 7.0 or higher (with built-in AI Client)
+- WordPress 7.0 or higher
 - PHP 7.4 or higher
 - Azure OpenAI resource with deployed models
 
@@ -26,19 +27,19 @@ This plugin provides Azure OpenAI integration for the WordPress AI Client, enabl
 1. Download [`ai-provider-for-azure-openai.zip`](https://github.com/soderlind/ai-provider-for-azure-openai/releases/latest/download/ai-provider-for-azure-openai.zip)
 2. Upload via `Plugins → Add New → Upload Plugin`
 3. Activate the plugin through the WordPress admin
-4. Configure credentials via Settings → Azure OpenAI or environment variables
+4. Configure credentials via Settings → Connectors or environment variables
 
 ## Configuration
 
-### Via Settings Page
+### Connectors Page
 
-1. Go to **Settings → Azure OpenAI**
-2. Enter your **Endpoint URL** (e.g., `https://your-resource.openai.azure.com`)
-3. Optionally set the **API Version** (defaults to `2024-02-15-preview`)
-4. Enter your **Deployment ID** (the name of your Azure OpenAI deployment, e.g., `gpt-4o`)
-5. Select the **Capabilities** your deployment supports (text generation, image generation, embedding generation, text-to-speech)
-6. Save settings
-7. Set your **API Key** in **Settings → AI Client** under the Azure OpenAI provider credentials (from Azure Portal → Your OpenAI Resource → Keys and Endpoint)
+1. Go to **Settings → Connectors**
+2. Find **Azure OpenAI** and click **Set Up**
+3. Enter your **API Key** (from Azure Portal → Your OpenAI Resource → Keys and Endpoint)
+4. Enter your **Endpoint URL**, **API Version**, **Deployment ID**, and **Capabilities**
+5. Click **Save Settings**
+
+All settings are stored as individual options and exposed via the REST Settings API.
 
 ### Via Environment Variables
 

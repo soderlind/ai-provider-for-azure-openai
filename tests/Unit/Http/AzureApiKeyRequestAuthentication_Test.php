@@ -9,6 +9,7 @@ namespace WordPress\AzureOpenAiAiProvider\Tests\Unit\Http;
 
 use AzureOpenAiTestCase;
 use Mockery;
+use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
 use WordPress\AzureOpenAiAiProvider\Http\AzureApiKeyRequestAuthentication;
 
 /**
@@ -17,7 +18,7 @@ use WordPress\AzureOpenAiAiProvider\Http\AzureApiKeyRequestAuthentication;
 class AzureApiKeyRequestAuthentication_Test extends AzureOpenAiTestCase {
 
 	/**
-	 * Test constructor stores API key.
+	 * Test constructor stores API key via parent.
 	 *
 	 * @return void
 	 */
@@ -25,10 +26,11 @@ class AzureApiKeyRequestAuthentication_Test extends AzureOpenAiTestCase {
 		$auth = new AzureApiKeyRequestAuthentication( 'my-test-api-key' );
 
 		$this->assertInstanceOf( AzureApiKeyRequestAuthentication::class, $auth );
+		$this->assertInstanceOf( ApiKeyRequestAuthentication::class, $auth );
 	}
 
 	/**
-	 * Test authenticateRequest adds api-key header.
+	 * Test authenticateRequest adds api-key header (not Bearer).
 	 *
 	 * @return void
 	 */
@@ -51,47 +53,19 @@ class AzureApiKeyRequestAuthentication_Test extends AzureOpenAiTestCase {
 	}
 
 	/**
-	 * Test getJsonSchema returns correct schema.
+	 * Test getApiKey returns the stored key.
 	 *
 	 * @return void
 	 */
-	public function test_get_json_schema_returns_correct_schema(): void {
-		$schema = AzureApiKeyRequestAuthentication::getJsonSchema();
+	public function test_get_api_key_returns_stored_key(): void {
+		$api_key = 'test-key-789';
+		$auth    = new AzureApiKeyRequestAuthentication( $api_key );
 
-		$this->assertIsArray( $schema );
-		$this->assertSame( 'object', $schema[ 'type' ] );
-		$this->assertArrayHasKey( 'properties', $schema );
-		$this->assertArrayHasKey( 'apiKey', $schema[ 'properties' ] );
-		$this->assertSame( 'string', $schema[ 'properties' ][ 'apiKey' ][ 'type' ] );
-		$this->assertContains( 'apiKey', $schema[ 'required' ] );
+		$this->assertSame( $api_key, $auth->getApiKey() );
 	}
 
 	/**
-	 * Test fromArray creates instance correctly.
-	 *
-	 * @return void
-	 */
-	public function test_from_array_creates_instance(): void {
-		$data = array( 'apiKey' => 'array-api-key-456' );
-		$auth = AzureApiKeyRequestAuthentication::fromArray( $data );
-
-		$this->assertInstanceOf( AzureApiKeyRequestAuthentication::class, $auth );
-	}
-
-	/**
-	 * Test fromArray handles missing apiKey gracefully.
-	 *
-	 * @return void
-	 */
-	public function test_from_array_handles_missing_key(): void {
-		$data = array();
-		$auth = AzureApiKeyRequestAuthentication::fromArray( $data );
-
-		$this->assertInstanceOf( AzureApiKeyRequestAuthentication::class, $auth );
-	}
-
-	/**
-	 * Test toArray returns correct data.
+	 * Test toArray returns correct data (inherited from parent).
 	 *
 	 * @return void
 	 */
@@ -129,7 +103,6 @@ class AzureApiKeyRequestAuthentication_Test extends AzureOpenAiTestCase {
 
 		$result = $auth->authenticateRequest( $request );
 
-		// Verify the mock was used correctly.
 		$this->assertSame( $request, $result );
 	}
 }

@@ -93,9 +93,9 @@ class AzureOpenAiEmbeddingModel extends AbstractApiBasedModel {
 		// Add encoding format if specified (float or base64).
 		$output_mime = $config->getOutputMimeType();
 		if ( 'application/base64' === $output_mime ) {
-			$params[ 'encoding_format' ] = 'base64';
+			$params['encoding_format'] = 'base64';
 		} else {
-			$params[ 'encoding_format' ] = 'float';
+			$params['encoding_format'] = 'float';
 		}
 
 		return $params;
@@ -112,21 +112,21 @@ class AzureOpenAiEmbeddingModel extends AbstractApiBasedModel {
 
 		$embeddings = array();
 
-		if ( isset( $data[ 'data' ] ) && is_array( $data[ 'data' ] ) ) {
-			foreach ( $data[ 'data' ] as $embedding_data ) {
+		if ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
+			foreach ( $data['data'] as $embedding_data ) {
 				$embeddings[] = array(
-					'index'     => $embedding_data[ 'index' ] ?? 0,
-					'embedding' => $embedding_data[ 'embedding' ] ?? array(),
+					'index'     => $embedding_data['index'] ?? 0,
+					'embedding' => $embedding_data['embedding'] ?? array(),
 				);
 			}
 		}
 
 		// Extract usage data.
 		$usage = array();
-		if ( isset( $data[ 'usage' ] ) ) {
+		if ( isset( $data['usage'] ) ) {
 			$usage = array(
-				'prompt_tokens' => $data[ 'usage' ][ 'prompt_tokens' ] ?? 0,
-				'total_tokens'  => $data[ 'usage' ][ 'total_tokens' ] ?? 0,
+				'prompt_tokens' => $data['usage']['prompt_tokens'] ?? 0,
+				'total_tokens'  => $data['usage']['total_tokens'] ?? 0,
 			);
 		}
 
@@ -136,7 +136,7 @@ class AzureOpenAiEmbeddingModel extends AbstractApiBasedModel {
 			$usage,
 			array(
 				'embeddings' => $embeddings,
-				'model'      => $data[ 'model' ] ?? '',
+				'model'      => $data['model'] ?? '',
 				'raw'        => $data,
 			)
 		);

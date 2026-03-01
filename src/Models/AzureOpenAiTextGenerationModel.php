@@ -21,9 +21,6 @@ use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
  *
  * The base class provides the full OpenAI chat/completions implementation:
  * parameter building, message formatting, response parsing, and tool calls.
- *
- * Note: This also satisfies the v0.3.1 SDK's `streamGenerateTextResult()`
- * requirement when the AI Experiments plugin is active (see docs/ai-experiments-bugs.md — Issue #2).
  */
 class AzureOpenAiTextGenerationModel extends AbstractOpenAiCompatibleTextGenerationModel {
 

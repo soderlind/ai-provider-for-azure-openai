@@ -18,6 +18,7 @@ use WordPress\AiClient\Providers\Models\DTO\SupportedOption;
 use WordPress\AiClient\Providers\Models\Enums\CapabilityEnum;
 use WordPress\AiClient\Providers\Models\Enums\OptionEnum;
 use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
+use WordPress\AzureOpenAiAiProvider\Settings\Connector_Settings;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
 /**
@@ -159,7 +160,17 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 		// NOTE: outputModalities is critical — PromptBuilder::generateTextResult() calls
 		// includeOutputModalities(text) before model lookup, so without it the model is rejected.
 		if ( $has_text_generation ) {
-			$input_modalities  = array( array( ModalityEnum::text() ) );
+			// Modern Azure OpenAI models (GPT-4o, GPT-4.1, etc.) support vision input.
+			// Declare all supported input modality combinations so the SDK's
+			// ModelRequirements::areMetBy() matches when callers attach images
+			// or documents via with_file().
+			$input_modalities  = array(
+				array( ModalityEnum::text() ),
+				array( ModalityEnum::text(), ModalityEnum::image() ),
+				array( ModalityEnum::text(), ModalityEnum::image(), ModalityEnum::audio() ),
+				array( ModalityEnum::text(), ModalityEnum::document() ),
+				array( ModalityEnum::text(), ModalityEnum::image(), ModalityEnum::document() ),
+			);
 			$output_modalities = array( array( ModalityEnum::text() ) );
 			$options[]         = new SupportedOption( OptionEnum::inputModalities(), $input_modalities );
 			$options[]         = new SupportedOption( OptionEnum::outputModalities(), $output_modalities );
@@ -177,6 +188,7 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 			$options[]         = new SupportedOption( OptionEnum::outputMimeType(), array( 'text/plain', 'application/json' ) );
 			$options[]         = new SupportedOption( OptionEnum::outputSchema() );
 			$options[]         = new SupportedOption( OptionEnum::functionDeclarations() );
+			$options[]         = new SupportedOption( OptionEnum::webSearch() );
 			$options[]         = new SupportedOption( OptionEnum::customOptions() );
 		}
 
@@ -197,16 +209,18 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 	 * @return ModelMetadata Model metadata.
 	 * @throws InvalidArgumentException If model metadata not found.
 	 */
-	public function getModelMetadata( string $modelId ): ModelMetadata {
+	public function getModelMetadata( string $modelId ): ModelMetadata { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Interface-defined parameter name.
 		$models = $this->listModelMetadata();
 
 		foreach ( $models as $model ) {
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase
 			if ( $model->getId() === $modelId ) {
 				return $model;
 			}
 		}
 
 		throw new InvalidArgumentException(
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase
 			sprintf( 'Model metadata not found for model ID: %s', $modelId )
 		);
 	}
@@ -217,11 +231,12 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 	 * @param string $modelId Model identifier.
 	 * @return bool True if metadata exists, false otherwise.
 	 */
-	public function hasModelMetadata( string $modelId ): bool {
+	public function hasModelMetadata( string $modelId ): bool { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Interface-defined parameter name.
 		try {
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase
 			$this->getModelMetadata( $modelId );
 			return true;
-		} catch (InvalidArgumentException $e) {
+		} catch ( InvalidArgumentException $e ) {
 			return false;
 		}
 	}
@@ -249,9 +264,8 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 		$settings = Settings_Manager::get_instance();
 		$endpoint = $settings->get_endpoint();
 
-		// Get API key from wp-ai-client's credential storage.
-		$credentials = get_option( 'wp_ai_client_provider_credentials', array() );
-		$api_key     = $credentials[ 'azure-openai' ] ?? '';
+		// Read API key from connector settings (the canonical source).
+		$api_key = Connector_Settings::get_real_api_key();
 
 		// Fallback to environment variable.
 		if ( empty( $api_key ) ) {
@@ -293,13 +307,13 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 			$body = wp_remote_retrieve_body( $response );
 			$data = json_decode( $body, true );
 
-			if ( ! isset( $data[ 'data' ] ) || ! is_array( $data[ 'data' ] ) ) {
+			if ( ! isset( $data['data'] ) || ! is_array( $data['data'] ) ) {
 				return $this->getStaticModelList();
 			}
 
-			return $this->parseDeploymentsToModelMetadata( $data[ 'data' ] );
+			return $this->parseDeploymentsToModelMetadata( $data['data'] );
 
-		} catch (\Exception $e) {
+		} catch ( \Exception $e ) {
 			// Fall back to static list on error.
 			return $this->getStaticModelList();
 		}
@@ -315,9 +329,9 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 		$models = array();
 
 		foreach ( $deployments as $deployment ) {
-			$deployment_id   = $deployment[ 'id' ] ?? '';
-			$model_name      = $deployment[ 'model' ] ?? $deployment_id;
-			$deployment_name = $deployment[ 'id' ] ?? $deployment[ 'name' ] ?? '';
+			$deployment_id   = $deployment['id'] ?? '';
+			$model_name      = $deployment['model'] ?? $deployment_id;
+			$deployment_name = $deployment['id'] ?? $deployment['name'] ?? '';
 
 			if ( empty( $deployment_name ) ) {
 				continue;

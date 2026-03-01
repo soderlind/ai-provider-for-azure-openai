@@ -6,6 +6,7 @@
  */
 
 spl_autoload_register(
+	// phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.classFound -- Standard autoloader convention.
 	static function ( string $class ): void {
 		$prefix   = 'WordPress\\AzureOpenAiAiProvider\\';
 		$base_dir = __DIR__ . '/';
