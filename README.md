@@ -8,7 +8,7 @@ This plugin provides Azure OpenAI integration for the WordPress AI Client, enabl
 
 >BONUS: [How to Add a Custom AI Provider to WordPress 7+](https://github.com/soderlind/ai-provider-for-azure-openai/blob/main/docs/how-to-add-ai-provider.md) — a step-by-step guide for developers to add AI Connectors to WordPress, with code examples.
 
-<img width="100%" alt="Screenshot 2026-03-01 at 16 53 43" src="https://github.com/user-attachments/assets/8db1909e-3fcd-4709-ad50-7554b03aa0e7" />
+<!--img width="100%" alt="Screenshot 2026-03-01 at 16 53 43" src="https://github.com/user-attachments/assets/8db1909e-3fcd-4709-ad50-7554b03aa0e7" /-->
 
 
 <img width="1216" height="594" alt="Screenshot 2026-03-01 at 16 53 43" src="./.wordpress-org/screenshot-1.png"/>
