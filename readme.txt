@@ -90,7 +90,8 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Screenshots ==
 
-1. Settings page for configuring Azure OpenAI.
+1. Connectors page showing Azure OpenAI settings form integrated with other connectors.
+2. Settings page for configuring Azure OpenAI.
 
 == Changelog ==
 
