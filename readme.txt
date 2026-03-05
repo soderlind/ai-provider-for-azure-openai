@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, artificial-intelligence, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.2.0 =
+* Fixed connector settings page on WordPress 7.0 beta 3 — hooks both page variants to cover the renamed connectors page
+* Fixed custom connector UI being overwritten by core's auto-registered generic ApiKeyConnector
+* Connector slug changed to `ai-provider/azure-openai` to match Beta 3's `{type}/{id}` format
+* Updated how-to guide with WordPress 7.0 Beta 3 differences
+
 = 1.1.2 =
 * Fixed fatal error on WordPress 7.0 beta 3 caused by the "AI Experiments" plugin shipping an outdated php-ai-client library that overrides the version built into core
 * Added version-conflict detection for incompatible php-ai-client libraries
@@ -134,6 +140,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Fixes connector settings page on WordPress 7.0 beta 3. Required if you upgraded to beta 3.
 
 = 1.1.2 =
 Fixes a fatal error when the AI Experiments plugin is active alongside WordPress 7.0. Deactivate AI Experiments to resolve.

@@ -410,8 +410,15 @@ function AzureOpenAIConnector( { slug, label, description } ) {
 	}, settingsPanel );
 }
 
-/* ---- Register the connector ---- */
-registerConnector( 'azure-openai', {
+/*
+ * Register the connector.
+ *
+ * Core's registerDefaultConnectors() is prevented from creating a default
+ * ApiKeyConnector for this provider via the PHP filter on
+ * 'script_module_data_options-connectors-wp-admin' (see plugin.php).
+ * Our registration is the only one, so no timing workaround is needed.
+ */
+registerConnector( 'ai-provider/azure-openai', {
 	label: __( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
 	description: __(
 		'Text, image, and embedding generation with Azure-hosted OpenAI models.',

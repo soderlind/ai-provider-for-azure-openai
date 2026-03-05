@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.0
+
+### Fixed
+
+- Connector settings page now works on WordPress 7.0 beta 3 — hooks both `options-connectors-wp-admin_init` and `connectors-wp-admin_init` to cover the renamed page
+- Custom connector UI no longer overwritten by core's auto-registered generic ApiKeyConnector — filters `script_module_data_*` to remove the duplicate entry
+- Connector slug changed to `ai-provider/azure-openai` to match Beta 3's `{type}/{id}` format
+
+### Changed
+
+- Updated `docs/how-to-add-ai-provider.md` with WordPress 7.0 Beta 3 differences (hook changes, slug format, data filter, new §5e section)
+
 ## 1.1.2
 
 ### Fixed
