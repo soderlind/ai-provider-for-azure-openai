@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.1.2
+ * Version: 1.2.0
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.1.2' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.2.0' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -178,15 +178,39 @@ add_action( 'init', __NAMESPACE__ . '\\register_connector_module' );
 /**
  * Enqueue the connector module on the Connectors admin page.
  *
- * The 'connectors-wp-admin_init' action fires only when the Connectors page
- * is being rendered, so this is the correct place to enqueue.
+ * WordPress 7.0 beta 3 ships two connectors page variants:
+ * - options-connectors.php  → fires 'options-connectors-wp-admin_init'
+ * - connectors.php (plugin) → fires 'connectors-wp-admin_init'
+ * Hook into both so the module loads regardless of which page is active.
  *
  * @return void
  */
 function enqueue_connector_module(): void {
 	wp_enqueue_script_module( 'ai-provider-for-azure-openai/connectors' );
 }
+add_action( 'options-connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
+
+/**
+ * Remove our provider from the connector JSON data sent to JavaScript.
+ *
+ * Core's registerDefaultConnectors() reads this data and registers a generic
+ * ApiKeyConnector for every provider. Because that function runs AFTER our
+ * script module (it's loaded via a dynamic import chain), it would overwrite
+ * our custom connector registration. Removing the entry from the data
+ * prevents the conflict entirely.
+ *
+ * @param array $data Script module data.
+ * @return array Filtered data.
+ */
+function filter_connector_script_data( array $data ): array {
+	if ( isset( $data[ 'connectors' ][ 'azure-openai' ] ) ) {
+		unset( $data[ 'connectors' ][ 'azure-openai' ] );
+	}
+	return $data;
+}
+add_filter( 'script_module_data_options-connectors-wp-admin', __NAMESPACE__ . '\\filter_connector_script_data', 20 );
+add_filter( 'script_module_data_connectors-wp-admin', __NAMESPACE__ . '\\filter_connector_script_data', 20 );
 
 /**
  * Run one-time migration from legacy settings to connector options.

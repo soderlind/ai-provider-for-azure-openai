@@ -29,6 +29,28 @@ By the end you will have:
 > WordPress release** without a deprecation period. Pin your tested WP version
 > and watch the [Make/Core blog](https://make.wordpress.org/core/) for updates.
 
+> **🔄 Changes in WordPress 7.0 Beta 3** (compared to Beta 2):
+>
+> 1. **Connectors page moved** from `connectors.php` to `options-connectors.php`.
+>    The page-specific hook changed from `connectors-wp-admin_init` to
+>    `options-connectors-wp-admin_init`. Hook **both** to stay compatible.
+> 2. **Core auto-registers providers.** Beta 3 reads all registered AI Client
+>    providers and creates a default `ApiKeyConnector` for each on the
+>    Connectors page. If your plugin provides a custom UI, you must **filter
+>    out** your provider from the page's JSON data — otherwise core's generic
+>    connector overwrites yours.
+> 3. **Slug format changed.** Auto-registered connectors use the slug
+>    `{type}/{id}` (e.g. `ai-provider/my-provider`). Your
+>    `registerConnector()` call must use the same slug so the store merges
+>    correctly.
+> 4. **Data filter names changed** to match the new page:
+>    `script_module_data_options-connectors-wp-admin` (primary) and
+>    `script_module_data_connectors-wp-admin` (fallback).
+>
+> See [§5c](#5c-register-and-enqueue-the-module),
+> [§5d](#5d-write-the-javascript-connector), and
+> [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3) for details.
+
 ---
 
 ## Table of Contents
@@ -48,6 +70,7 @@ By the end you will have:
   - [5b. Build the JavaScript with wp-scripts](#5b-build-the-javascript-with-wp-scripts)
   - [5c. Register and Enqueue the Module](#5c-register-and-enqueue-the-module)
   - [5d. Write the JavaScript Connector](#5d-write-the-javascript-connector)
+  - [5e. Prevent Core from Overriding Your Connector (Beta 3)](#5e-prevent-core-from-overriding-your-connector-beta-3)
 - [Step 6 — Wire Up Authentication](#step-6--wire-up-authentication)
 - [Complete File Listing](#complete-file-listing)
 - [Testing Your Provider](#testing-your-provider)
@@ -795,11 +818,15 @@ add_action( 'init', __NAMESPACE__ . '\\register_connector_module' );
 /**
  * Enqueue the module when the Connectors page renders.
  *
- * The 'connectors-wp-admin_init' action fires only on that page.
+ * Beta 2 uses 'connectors-wp-admin_init'.
+ * Beta 3 moved the page to options-connectors.php, so the hook became
+ * 'options-connectors-wp-admin_init'. Hook both so your plugin works
+ * regardless of which beta (or final release) the site runs.
  */
 function enqueue_connector_module(): void {
     wp_enqueue_script_module( 'my-ai-provider/connectors' );
 }
+add_action( 'options-connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 ```
 
@@ -987,12 +1014,23 @@ function MyIcon() {
 }
 
 // ── Register ────────────────────────────────────────────────────
-registerConnector( 'my-ai-provider', {
+// In Beta 3, core auto-registers providers with slug '{type}/{id}'.
+// Use the same format so your custom connector replaces the default one.
+// The 'type' is derived from your ProviderTypeEnum (e.g. 'ai-provider')
+// and the 'id' from your Provider class's slug.
+registerConnector( 'ai-provider/my-ai-provider', {
     label: __( 'My AI Service', 'my-ai-provider' ),
     description: __( 'Text generation with My AI Service.', 'my-ai-provider' ),
     render: MyConnector,
 } );
 ```
+
+> **Note on the slug format:** In Beta 2 a simple slug like `'my-ai-provider'`
+> was sufficient. Beta 3 changed the internal store to use `{type}/{id}`
+> slugs (e.g. `ai-provider/my-ai-provider`). If your slug doesn't match,
+> the Redux store treats your connector and the auto-registered one as two
+> separate entries, and you'll end up with duplicates — or worse, the default
+> generic connector wins.
 
 ### Understanding the key JS APIs
 
@@ -1001,6 +1039,51 @@ registerConnector( 'my-ai-provider', {
 | `registerConnector( slug, { label, description, render })` | Adds your connector to the Connectors page. The `render` function receives `slug`, `label`, `description` as props. |
 | `ConnectorItem`                                           | UI component for a connector row. Props: `icon`, `name`, `description`, `actionArea`, `children` (expanded panel). |
 | `DefaultConnectorSettings`                                | Reusable API-key input. Props: `onSave`, `onRemove`, `initialValue`, `readOnly`, `helpUrl`, `helpLabel`. |
+
+### 5e. Prevent Core from Overriding Your Connector (Beta 3)
+
+Starting in Beta 3, WordPress reads every registered AI Client provider and
+pre-populates the Connectors page with a **generic `ApiKeyConnector`** for
+each. This data is embedded in a `<script id="wp-script-module-data-…">` tag
+as JSON.
+
+If your plugin registers a custom connector UI, the core-generated entry
+competes with yours in the Redux store. To prevent this, filter the JSON data
+and remove your provider before the page renders:
+
+```php
+/**
+ * Remove our provider from the auto-generated connector data
+ * so our custom JS connector is the only one registered.
+ *
+ * Hook both filter names to cover both page variants.
+ */
+function filter_connector_script_data( array $data ): array {
+    if ( isset( $data['defaultConnectors'] ) && is_array( $data['defaultConnectors'] ) ) {
+        $data['defaultConnectors'] = array_values(
+            array_filter(
+                $data['defaultConnectors'],
+                fn( $c ) => ( $c['id'] ?? '' ) !== 'my-ai-provider'
+            )
+        );
+    }
+    return $data;
+}
+add_filter(
+    'script_module_data_options-connectors-wp-admin',
+    __NAMESPACE__ . '\\filter_connector_script_data'
+);
+add_filter(
+    'script_module_data_connectors-wp-admin',
+    __NAMESPACE__ . '\\filter_connector_script_data'
+);
+```
+
+> **Why two filters?** The filter name derives from the page file. Beta 3's
+> primary page is `options-connectors/page-wp-admin.php` → filter
+> `script_module_data_options-connectors-wp-admin`. The fallback page
+> `connectors/page-wp-admin.php` uses `script_module_data_connectors-wp-admin`.
+> Hooking both keeps you safe across beta versions.
 
 ---
 
@@ -1134,11 +1217,33 @@ function register_connector_module(): void {
 }
 add_action( 'init', __NAMESPACE__ . '\\register_connector_module' );
 
-// 5. Enqueue on the Connectors page only.
+// 5. Enqueue on the Connectors page only (hook both page variants).
 function enqueue_connector_module(): void {
     wp_enqueue_script_module( 'my-ai-provider/connectors' );
 }
+add_action( 'options-connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
+
+// 6. (Beta 3) Filter out our provider from core's auto-generated connectors.
+function filter_connector_script_data( array $data ): array {
+    if ( isset( $data['defaultConnectors'] ) && is_array( $data['defaultConnectors'] ) ) {
+        $data['defaultConnectors'] = array_values(
+            array_filter(
+                $data['defaultConnectors'],
+                fn( $c ) => ( $c['id'] ?? '' ) !== 'my-ai-provider'
+            )
+        );
+    }
+    return $data;
+}
+add_filter(
+    'script_module_data_options-connectors-wp-admin',
+    __NAMESPACE__ . '\\filter_connector_script_data'
+);
+add_filter(
+    'script_module_data_connectors-wp-admin',
+    __NAMESPACE__ . '\\filter_connector_script_data'
+);
 ```
 
 ---
@@ -1284,7 +1389,7 @@ describe( 'My Connector', () => {
     } );
 
     it( 'should register with expected slug', () => {
-        expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'my-provider' );
+        expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'ai-provider/my-ai-provider' );
     } );
 } );
 ```
@@ -1297,6 +1402,12 @@ Run `npm run test` (one-off) or `npm run test:watch` (interactive mode).
   tab for the script module import map (`<script type="importmap">`). Your
   module should be listed. If it's missing, you likely have an unregistered
   dependency — see [§5a](#5a-important-script-modules-vs-classic-scripts).
+  Also verify you're hooking the correct page action — Beta 3 uses
+  `options-connectors-wp-admin_init`, not `connectors-wp-admin_init`.
+
+- **Custom UI replaced by a generic API-key input?** Core's auto-registration
+  is overwriting your connector. Add the `script_module_data_*` filter
+  described in [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3).
 
 - **Settings not saving?** Make sure your `register_setting()` calls use
   `'connectors'` as the group and `'show_in_rest' => true`.
@@ -1354,10 +1465,17 @@ Support environment variables (e.g. `MY_AI_API_KEY`) as a fallback so users
 can configure the provider in `wp-config.php` or deployment environments
 without storing keys in the database.
 
-### The `connectors-wp-admin_init` action
+### The connectors page hooks
 
-This action fires **only** when the Connectors admin page is being rendered.
-Use it to enqueue your JS module — this avoids loading it on every admin page.
+The Connectors admin page fires a page-specific action you can use to enqueue
+your JS module — this avoids loading it on every admin page.
+
+| Beta   | Page file                        | Hook                                    |
+| ------ | -------------------------------- | --------------------------------------- |
+| Beta 2 | `connectors/page-wp-admin.php`   | `connectors-wp-admin_init`              |
+| Beta 3 | `options-connectors/page-wp-admin.php` | `options-connectors-wp-admin_init` |
+
+Hook **both** to stay compatible across versions.
 
 ### OpenAI-compatible APIs
 
