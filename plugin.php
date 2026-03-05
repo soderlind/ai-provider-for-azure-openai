@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,12 +27,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.1.1' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.1.2' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
 // Load autoloader.
 require_once __DIR__ . '/src/autoload.php';
+
+/**
+ * Detect whether the loaded ProviderMetadata class is missing methods
+ * required by WordPress 7.0, which happens when the old "AI Experiments"
+ * plugin ships an outdated php-ai-client via the Jetpack autoloader.
+ *
+ * @return bool True if the conflict is detected.
+ */
+function has_ai_client_version_conflict(): bool {
+	// Trigger autoloading so we test the class that would actually be used.
+	if ( ! class_exists( \WordPress\AiClient\Providers\DTO\ProviderMetadata::class ) ) {
+		return false;
+	}
+	return ! method_exists(
+		\WordPress\AiClient\Providers\DTO\ProviderMetadata::class,
+		'getAuthenticationMethod'
+	);
+}
+
+/**
+ * Show an admin notice when a conflicting php-ai-client version is detected.
+ *
+ * @return void
+ */
+function show_ai_client_conflict_notice(): void {
+	if ( ! has_ai_client_version_conflict() ) {
+		return;
+	}
+	printf(
+		'<div class="notice notice-error"><p>%s</p></div>',
+		esc_html__(
+			'AI Provider for Azure OpenAI: A conflicting AI client library was detected. Please deactivate the "AI Experiments" plugin — its outdated library overrides the version built into WordPress 7.0.',
+			'ai-provider-for-azure-openai'
+		)
+	);
+}
+add_action( 'admin_notices', __NAMESPACE__ . '\\show_ai_client_conflict_notice' );
+add_action( 'network_admin_notices', __NAMESPACE__ . '\\show_ai_client_conflict_notice' );
 
 /**
  * Register the Azure OpenAI provider with the AI Client.
@@ -42,6 +80,12 @@ require_once __DIR__ . '/src/autoload.php';
  */
 function register_provider(): void {
 	if ( ! class_exists( AiClient::class ) ) {
+		return;
+	}
+
+	// Bail out when the old AI Experiments plugin is active to avoid a fatal
+	// error caused by its outdated php-ai-client (missing getAuthenticationMethod).
+	if ( has_ai_client_version_conflict() ) {
 		return;
 	}
 
@@ -63,6 +107,10 @@ add_action( 'init', __NAMESPACE__ . '\\register_provider', 5 );
  */
 function setup_authentication(): void {
 	if ( ! class_exists( AiClient::class ) ) {
+		return;
+	}
+
+	if ( has_ai_client_version_conflict() ) {
 		return;
 	}
 
