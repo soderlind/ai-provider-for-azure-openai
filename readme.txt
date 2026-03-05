@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, artificial-intelligence, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,11 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.1.2 =
+* Fixed fatal error on WordPress 7.0 beta 3 caused by the "AI Experiments" plugin shipping an outdated php-ai-client library that overrides the version built into core
+* Added version-conflict detection for incompatible php-ai-client libraries
+* Added admin notice guiding users to deactivate the conflicting plugin
+
 = 1.1.1 =
 * Added environment variable fallback for capabilities (AZURE_OPENAI_CAPABILITIES) — accepts a comma-separated list
 
@@ -129,6 +134,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Fixes a fatal error when the AI Experiments plugin is active alongside WordPress 7.0. Deactivate AI Experiments to resolve.
 
 = 1.1.1 =
 Capabilities can now be set via the AZURE_OPENAI_CAPABILITIES environment variable.

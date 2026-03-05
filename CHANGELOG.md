@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.2
+
+### Fixed
+
+- Fatal error on WordPress 7.0 beta 3 when the "AI Experiments" plugin is active — its bundled php-ai-client v0.3.1 (via Jetpack autoloader) overrides core's v1.2.0, missing `getAuthenticationMethod()`
+
+### Added
+
+- `has_ai_client_version_conflict()` guard that detects incompatible php-ai-client versions at runtime
+- Admin notice prompting users to deactivate the conflicting plugin
+
 ## 1.1.1
 
 ### Added
