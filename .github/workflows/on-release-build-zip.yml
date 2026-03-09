@@ -62,6 +62,20 @@ jobs:
         working-directory: /tmp
         run: zip -r ${{ github.workspace }}/ai-provider-for-azure-openai.zip ai-provider-for-azure-openai/
 
+      - name: Verify Archive Contents
+        run: |
+          echo "Listing ai-provider-for-azure-openai.zip entries:"
+          unzip -l ai-provider-for-azure-openai.zip || { echo "Failed to list zip contents"; exit 1; }
+          echo "Total files: $(unzip -l ai-provider-for-azure-openai.zip | awk 'END{print $2}')"
+
+          # Verify Plugin Update Checker is included (required dependency)
+          if unzip -l ai-provider-for-azure-openai.zip | grep -q "vendor/yahnis-elsts/plugin-update-checker"; then
+            echo "✓ Plugin Update Checker is included"
+          else
+            echo "✗ ERROR: Plugin Update Checker is missing from the release!"
+            exit 1
+          fi
+
       - name: Upload zip to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
