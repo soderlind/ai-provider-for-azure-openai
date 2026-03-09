@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.3.0
+
+### Added
+
+- GitHub-based automatic plugin updates via `yahnis-elsts/plugin-update-checker` — the plugin now self-updates from GitHub releases
+- `class-github-updater.php` wrapper for zero-config update checker setup
+- Release zip verification step in GitHub Actions workflows — build fails if `vendor/yahnis-elsts/plugin-update-checker` is missing
+
+### Changed
+
+- Updated `@testing-library/react` to ^16.3.2 (patch)
+- Updated `@wordpress/scripts` to ^31.6.0 (minor)
+- Added npm overrides to resolve transitive security vulnerabilities (serialize-javascript, minimatch, webpack-dev-server)
+
+### Security
+
+- Fixed 14 npm audit vulnerabilities (svgo, immutable, serialize-javascript, minimatch, webpack-dev-server) via direct updates and overrides
+
 ## 1.2.0
 
 ### Fixed

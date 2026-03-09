@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, artificial-intelligence, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.3.0 =
+* Added GitHub-based automatic plugin updates — the plugin now self-updates from GitHub releases
+* Added release zip verification in GitHub Actions workflows
+* Updated @testing-library/react to ^16.3.2 and @wordpress/scripts to ^31.6.0
+* Fixed 14 npm audit vulnerabilities via direct updates and overrides
+
 = 1.2.0 =
 * Fixed connector settings page on WordPress 7.0 beta 3 — hooks both page variants to cover the renamed connectors page
 * Fixed custom connector UI being overwritten by core's auto-registered generic ApiKeyConnector
@@ -140,6 +146,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+Adds automatic updates from GitHub releases. Security dependency fixes.
 
 = 1.2.0 =
 Fixes connector settings page on WordPress 7.0 beta 3. Required if you upgraded to beta 3.
