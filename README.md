@@ -34,7 +34,9 @@ This plugin provides Azure OpenAI integration for the WordPress AI Client, enabl
 1. Download [`ai-provider-for-azure-openai.zip`](https://github.com/soderlind/ai-provider-for-azure-openai/releases/latest/download/ai-provider-for-azure-openai.zip)
 2. Upload via `Plugins → Add New → Upload Plugin`
 3. Activate the plugin through the WordPress admin
-4. Configure credentials via Settings → Connectors or environment variables
+
+
+Plugin [updates are handled automatically](https://github.com/soderlind/wordpress-plugin-github-updater#readme) via GitHub. No need to manually download and install updates.
 
 ## Configuration
 
