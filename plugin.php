@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,12 +27,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.2.0' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.3.0' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
 // Load autoloader.
 require_once __DIR__ . '/src/autoload.php';
+
+// GitHub-based plugin updates.
+if ( ! class_exists( \Soderlind\WordPress\GitHubUpdater::class ) ) {
+	require_once __DIR__ . '/class-github-updater.php';
+}
+\Soderlind\WordPress\GitHubUpdater::init(
+	github_url:  'https://github.com/soderlind/ai-provider-for-azure-openai',
+	plugin_file: AZURE_OPENAI_PROVIDER_FILE,
+	plugin_slug: 'ai-provider-for-azure-openai',
+	name_regex:  '/ai-provider-for-azure-openai\.zip/',
+	branch:      'main',
+);
 
 /**
  * Detect whether the loaded ProviderMetadata class is missing methods
