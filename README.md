@@ -2,6 +2,8 @@
 
 AI Provider for Azure OpenAI for the WordPress AI Client.
 
+>I've tested the AI Provider for Azure OpenAI using [Virtual Media Folders AI Organizer](https://github.com/soderlind/vmfa-ai-organizer?tab=readme-ov-file#virtual-media-folders-ai-organizer)
+
 ## Description
 
 This plugin provides Azure OpenAI integration for the WordPress AI Client, enabling text generation, image generation, embedding generation, and text-to-speech using Azure's hosted OpenAI models.
