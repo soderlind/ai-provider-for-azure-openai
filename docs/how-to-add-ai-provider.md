@@ -1,5 +1,7 @@
 # How to Add a Custom AI Provider to WordPress 7
 
+> Tested with WordPress 7.0-beta5
+
 This guide walks you through building a WordPress plugin that registers a
 custom AI provider with the new **AI Client** that ships with WordPress 7.0.
 By the end you will have:
