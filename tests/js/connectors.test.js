@@ -91,9 +91,9 @@ describe( 'Azure OpenAI Connector', () => {
 	/* ---- Registration ----------------------------------------- */
 
 	describe( 'registerConnector', () => {
-		it( 'should register with slug "ai-provider/azure-openai"', () => {
+		it( 'should register with slug "ai_provider/azure_openai"', () => {
 			expect( mockRegisterConnector ).toHaveBeenCalledTimes( 1 );
-			expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'ai-provider/azure-openai' );
+			expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'ai_provider/azure_openai' );
 		} );
 
 		it( 'should provide label, description, and render function', () => {

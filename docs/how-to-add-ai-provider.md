@@ -42,7 +42,7 @@ By the end you will have:
 >    out** your provider from the page's JSON data — otherwise core's generic
 >    connector overwrites yours.
 > 3. **Slug format changed.** Auto-registered connectors use the slug
->    `{type}/{id}` (e.g. `ai-provider/my-provider`). Your
+>    `{type}/{id}` (e.g. `ai_provider/my_provider`). Your
 >    `registerConnector()` call must use the same slug so the store merges
 >    correctly.
 > 4. **Data filter names changed** to match the new page:
@@ -78,6 +78,21 @@ By the end you will have:
 - [Testing Your Provider](#testing-your-provider)
   - [Testing the Connectors JavaScript (Vitest)](#testing-the-connectors-javascript-vitest)
 - [Gotchas and Tips](#gotchas-and-tips)
+
+---
+
+> **⚠️ Provider ID format:** The Connector Registry (`WP_Connector_Registry`)
+> only accepts IDs matching `/^[a-z0-9_]+$/` — **lowercase letters, digits,
+> and underscores only**. Hyphens are **not** allowed in provider IDs and will
+> cause silent registration failure. Use underscores: `my_ai_provider`, not
+> `my-ai-provider`. This restriction applies to:
+> - The first argument of `ProviderMetadata` (PHP provider slug)
+> - The first argument of `registerConnector()` (JS connector slug — the `{id}` part)
+> - The first argument of `setProviderRequestAuthentication()` (auth binding)
+> - The `usingProvider()` call in the AI Client API
+>
+> Note: Text domains and plugin directory names **can** use hyphens — this
+> restriction only applies to the provider/connector ID.
 
 ---
 
@@ -271,7 +286,7 @@ class MyProvider extends AbstractApiProvider {
      */
     protected static function createProviderMetadata(): ProviderMetadata {
         return new ProviderMetadata(
-            'my-ai-provider',                // Unique slug.
+            'my_ai_provider',                // Unique slug (underscores only, no hyphens).
             __( 'My AI Service', 'my-ai-provider' ),  // Display name.
             ProviderTypeEnum::cloud(),       // cloud | server | client.
             'https://my-ai-service.com/keys', // Where users get API keys.
@@ -619,8 +634,8 @@ namespace MyAiProvider\Settings;
 class ConnectorSettings {
 
     // Option names — prefixed to avoid collisions.
-    const OPTION_API_KEY  = 'connectors_ai_my_provider_api_key';
-    const OPTION_ENDPOINT = 'connectors_ai_my_provider_endpoint';
+    const OPTION_API_KEY  = 'connectors_ai_my_ai_provider_api_key';
+    const OPTION_ENDPOINT = 'connectors_ai_my_ai_provider_endpoint';
 
     /**
      * Register settings. Call on `init`.
@@ -857,8 +872,8 @@ const { Button, TextControl } = window.wp.components;
 const el = createElement;
 
 // Option names must match your PHP register_setting() calls.
-const API_KEY_OPTION  = 'connectors_ai_my_provider_api_key';
-const ENDPOINT_OPTION = 'connectors_ai_my_provider_endpoint';
+const API_KEY_OPTION  = 'connectors_ai_my_ai_provider_api_key';
+const ENDPOINT_OPTION = 'connectors_ai_my_ai_provider_endpoint';
 
 /**
  * Hook: load & save settings via the WP REST Settings endpoint.
@@ -1020,16 +1035,16 @@ function MyIcon() {
 // Use the same format so your custom connector replaces the default one.
 // The 'type' is derived from your ProviderTypeEnum (e.g. 'ai-provider')
 // and the 'id' from your Provider class's slug.
-registerConnector( 'ai-provider/my-ai-provider', {
+registerConnector( 'ai_provider/my_ai_provider', {
     label: __( 'My AI Service', 'my-ai-provider' ),
     description: __( 'Text generation with My AI Service.', 'my-ai-provider' ),
     render: MyConnector,
 } );
 ```
 
-> **Note on the slug format:** In Beta 2 a simple slug like `'my-ai-provider'`
+> **Note on the slug format:** In Beta 2 a simple slug like `'my_ai_provider'`
 > was sufficient. Beta 3 changed the internal store to use `{type}/{id}`
-> slugs (e.g. `ai-provider/my-ai-provider`). If your slug doesn't match,
+> slugs (e.g. `ai_provider/my_ai_provider`). If your slug doesn't match,
 > the Redux store treats your connector and the auto-registered one as two
 > separate entries, and you'll end up with duplicates — or worse, the default
 > generic connector wins.
@@ -1065,7 +1080,7 @@ function filter_connector_script_data( array $data ): array {
         $data['defaultConnectors'] = array_values(
             array_filter(
                 $data['defaultConnectors'],
-                fn( $c ) => ( $c['id'] ?? '' ) !== 'my-ai-provider'
+                fn( $c ) => ( $c['id'] ?? '' ) !== 'my_ai_provider'
             )
         );
     }
@@ -1125,7 +1140,7 @@ function setup_authentication(): void {
 
         // Option B: Use a custom authentication class.
         $registry->setProviderRequestAuthentication(
-            'my-ai-provider',
+            'my_ai_provider',  // Must match the provider slug (underscores, no hyphens).
             new \MyAiProvider\Http\MyRequestAuthentication( $api_key )
         );
     }
@@ -1193,7 +1208,7 @@ function setup_authentication(): void {
     }
     if ( ! empty( $api_key ) ) {
         AiClient::defaultRegistry()->setProviderRequestAuthentication(
-            'my-ai-provider',
+            'my_ai_provider',
             new \MyAiProvider\Http\MyRequestAuthentication( $api_key )
         );
     }
@@ -1232,7 +1247,7 @@ function filter_connector_script_data( array $data ): array {
         $data['defaultConnectors'] = array_values(
             array_filter(
                 $data['defaultConnectors'],
-                fn( $c ) => ( $c['id'] ?? '' ) !== 'my-ai-provider'
+                fn( $c ) => ( $c['id'] ?? '' ) !== 'my_ai_provider'
             )
         );
     }
@@ -1265,7 +1280,7 @@ add_filter(
 use WordPress\AiClient\AiClient;
 
 $result = AiClient::prompt( 'Explain gravity in one sentence.' )
-    ->usingProvider( 'my-ai-provider' )   // Your provider slug.
+    ->usingProvider( 'my_ai_provider' )   // Your provider slug (underscores only).
     ->usingModel( 'my-model-large' )      // Your model ID.
     ->generateTextResult();
 
@@ -1391,7 +1406,7 @@ describe( 'My Connector', () => {
     } );
 
     it( 'should register with expected slug', () => {
-        expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'ai-provider/my-ai-provider' );
+        expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'ai_provider/my_ai_provider' );
     } );
 } );
 ```
@@ -1400,7 +1415,11 @@ Run `npm run test` (one-off) or `npm run test:watch` (interactive mode).
 
 ### Debugging tips
 
-- **Provider not appearing on Connectors page?** Check the browser's Network
+- **Provider not appearing on Connectors page?** First, check that your
+  provider ID uses only lowercase letters, digits, and underscores — **no
+  hyphens**. `WP_Connector_Registry::register()` silently rejects IDs that
+  don't match `/^[a-z0-9_]+$/`, so `my-provider` will fail while
+  `my_provider` works. If the ID is correct, check the browser's Network
   tab for the script module import map (`<script type="importmap">`). Your
   module should be listed. If it's missing, you likely have an unregistered
   dependency — see [§5a](#5a-important-script-modules-vs-classic-scripts).
@@ -1459,7 +1478,8 @@ WordPress core masks keys by showing bullet characters (`•`) plus the last
 
 Prefix your option names with `connectors_ai_` followed by your provider slug
 to avoid collisions with other plugins. Example:
-`connectors_ai_my_provider_api_key`.
+`connectors_ai_my_ai_provider_api_key`. The slug must use underscores
+(matching your provider ID).
 
 ### Environment variable fallback
 

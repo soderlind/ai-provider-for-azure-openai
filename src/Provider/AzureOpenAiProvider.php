@@ -137,7 +137,7 @@ class AzureOpenAiProvider extends AbstractApiProvider {
 	 */
 	protected static function createProviderMetadata(): ProviderMetadata {
 		return new ProviderMetadata(
-			'azure-openai',
+			'azure_openai',
 			__( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
 			ProviderTypeEnum::cloud(),
 			'https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI',
