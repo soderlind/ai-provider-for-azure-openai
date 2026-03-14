@@ -77,7 +77,7 @@ use WordPress\AiClient\AiClient;
 
 // Get an Azure OpenAI model
 $client = AiClient::default();
-$model = $client->getModel( 'azure-openai', 'gpt-4o' );
+$model = $client->getModel( 'azure_openai', 'gpt-4o' );
 
 // Generate text
 $result = $model->generateText( [

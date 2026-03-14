@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.3.0' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.4.0' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -55,7 +55,7 @@ if ( ! class_exists( \Soderlind\WordPress\GitHubUpdater::class ) ) {
  */
 function has_ai_client_version_conflict(): bool {
 	// Trigger autoloading so we test the class that would actually be used.
-	if ( ! class_exists( \WordPress\AiClient\Providers\DTO\ProviderMetadata::class) ) {
+	if ( ! class_exists( \WordPress\AiClient\Providers\DTO\ProviderMetadata::class ) ) {
 		return false;
 	}
 	return ! method_exists(
@@ -91,7 +91,7 @@ add_action( 'network_admin_notices', __NAMESPACE__ . '\\show_ai_client_conflict_
  * @return void
  */
 function register_provider(): void {
-	if ( ! class_exists( AiClient::class) ) {
+	if ( ! class_exists( AiClient::class ) ) {
 		return;
 	}
 
@@ -103,8 +103,8 @@ function register_provider(): void {
 
 	$registry = AiClient::defaultRegistry();
 
-	if ( ! $registry->hasProvider( AzureOpenAiProvider::class) ) {
-		$registry->registerProvider( AzureOpenAiProvider::class);
+	if ( ! $registry->hasProvider( AzureOpenAiProvider::class ) ) {
+		$registry->registerProvider( AzureOpenAiProvider::class );
 	}
 }
 // Register provider early so wp-ai-client detects it for settings page.
@@ -118,7 +118,7 @@ add_action( 'init', __NAMESPACE__ . '\\register_provider', 5 );
  * @return void
  */
 function setup_authentication(): void {
-	if ( ! class_exists( AiClient::class) ) {
+	if ( ! class_exists( AiClient::class ) ) {
 		return;
 	}
 
@@ -140,7 +140,7 @@ function setup_authentication(): void {
 	if ( ! empty( $api_key ) ) {
 		// Override with Azure-specific authentication (uses 'api-key' header instead of 'Authorization: Bearer').
 		$registry->setProviderRequestAuthentication(
-			'azure-openai',
+			'azure_openai',
 			new AzureApiKeyRequestAuthentication( $api_key )
 		);
 	}
@@ -216,8 +216,8 @@ add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_mod
  * @return array Filtered data.
  */
 function filter_connector_script_data( array $data ): array {
-	if ( isset( $data[ 'connectors' ][ 'azure-openai' ] ) ) {
-		unset( $data[ 'connectors' ][ 'azure-openai' ] );
+	if ( isset( $data['connectors']['azure_openai'] ) ) {
+		unset( $data['connectors']['azure_openai'] );
 	}
 	return $data;
 }
@@ -229,7 +229,7 @@ add_filter( 'script_module_data_connectors-wp-admin', __NAMESPACE__ . '\\filter_
  *
  * Migrates:
  *  - Serialized Settings_Manager options → individual connector options.
- *  - wp_ai_client_provider_credentials['azure-openai'] → connector API key option.
+ *  - wp_ai_client_provider_credentials['azure-openai' or 'azure_openai'] → connector API key option.
  *
  * @return void
  */
@@ -244,23 +244,23 @@ function maybe_migrate_settings(): void {
 	$legacy = get_option( Settings_Manager::OPTION_NAME, array() );
 
 	if ( ! empty( $legacy ) ) {
-		if ( ! empty( $legacy[ 'endpoint' ] ) && ! get_option( Connector_Settings::OPTION_ENDPOINT ) ) {
-			update_option( Connector_Settings::OPTION_ENDPOINT, $legacy[ 'endpoint' ] );
+		if ( ! empty( $legacy['endpoint'] ) && ! get_option( Connector_Settings::OPTION_ENDPOINT ) ) {
+			update_option( Connector_Settings::OPTION_ENDPOINT, $legacy['endpoint'] );
 		}
-		if ( ! empty( $legacy[ 'api_version' ] ) && ! get_option( Connector_Settings::OPTION_API_VERSION ) ) {
-			update_option( Connector_Settings::OPTION_API_VERSION, $legacy[ 'api_version' ] );
+		if ( ! empty( $legacy['api_version'] ) && ! get_option( Connector_Settings::OPTION_API_VERSION ) ) {
+			update_option( Connector_Settings::OPTION_API_VERSION, $legacy['api_version'] );
 		}
-		if ( ! empty( $legacy[ 'deployment_id' ] ) && ! get_option( Connector_Settings::OPTION_DEPLOYMENT_ID ) ) {
-			update_option( Connector_Settings::OPTION_DEPLOYMENT_ID, $legacy[ 'deployment_id' ] );
+		if ( ! empty( $legacy['deployment_id'] ) && ! get_option( Connector_Settings::OPTION_DEPLOYMENT_ID ) ) {
+			update_option( Connector_Settings::OPTION_DEPLOYMENT_ID, $legacy['deployment_id'] );
 		}
-		if ( ! empty( $legacy[ 'capabilities' ] ) && ! get_option( Connector_Settings::OPTION_CAPABILITIES ) ) {
-			update_option( Connector_Settings::OPTION_CAPABILITIES, $legacy[ 'capabilities' ] );
+		if ( ! empty( $legacy['capabilities'] ) && ! get_option( Connector_Settings::OPTION_CAPABILITIES ) ) {
+			update_option( Connector_Settings::OPTION_CAPABILITIES, $legacy['capabilities'] );
 		}
 	}
 
 	// Migrate API key from wp-ai-client credentials.
 	$credentials = get_option( 'wp_ai_client_provider_credentials', array() );
-	$api_key     = $credentials[ 'azure-openai' ] ?? '';
+	$api_key     = $credentials['azure_openai'] ?? $credentials['azure-openai'] ?? '';
 
 	if ( ! empty( $api_key ) && ! get_option( Connector_Settings::OPTION_API_KEY ) ) {
 		update_option( Connector_Settings::OPTION_API_KEY, $api_key );

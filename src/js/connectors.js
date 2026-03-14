@@ -418,7 +418,7 @@ function AzureOpenAIConnector( { slug, label, description } ) {
  * 'script_module_data_options-connectors-wp-admin' (see plugin.php).
  * Our registration is the only one, so no timing workaround is needed.
  */
-registerConnector( 'ai-provider/azure-openai', {
+registerConnector( 'ai_provider/azure_openai', {
 	label: __( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
 	description: __(
 		'Text, image, and embedding generation with Azure-hosted OpenAI models.',

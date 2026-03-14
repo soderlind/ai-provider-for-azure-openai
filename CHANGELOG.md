@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.0
+
+### Fixed
+
+- Provider ID changed from `azure-openai` to `azure_openai` — hyphens are rejected by `WP_Connector_Registry::register()` which validates IDs with `/^[a-z0-9_]+$/`
+- Connector now registers correctly with the WP 7.0 Connector Registry and appears on Settings → Connectors
+- AI Experiments "no valid AI Connector" warning no longer appears when the Azure provider is configured
+- Migration handles both `azure-openai` and `azure_openai` credential keys for backward compatibility
+- Script data filter updated to use `azure_openai` key
+- Updated `docs/how-to-add-ai-provider.md` with provider ID format requirements and prominent warning about the underscore-only restriction
+- Submitted Trac ticket proposing that `_wp_connectors_init()` sanitize provider IDs (hyphens → underscores) to prevent this issue for future providers: https://core.trac.wordpress.org/ticket/64861
+
+### Changed
+
+- **Breaking:** Provider ID is now `azure_openai` — code using `$client->getModel('azure-openai', ...)` must update to `azure_openai`
+- JS connector slug changed from `ai-provider/azure-openai` to `ai_provider/azure_openai`
+- Updated `docs/how-to-add-ai-provider.md` with provider ID format requirements and prominent warning about the underscore-only restriction
+
+### Added
+
+- `docs/ticket.md` — draft Core Trac ticket proposing that `_wp_connectors_init()` sanitize provider IDs (hyphens → underscores)
+- `docs/ticket.trac.txt` — same ticket in Trac WikiFormatting
+
 ## 1.3.0
 
 ### Added
