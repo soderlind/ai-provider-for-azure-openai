@@ -93,6 +93,8 @@ By the end you will have:
 >
 > Note: Text domains and plugin directory names **can** use hyphens — this
 > restriction only applies to the provider/connector ID.
+>
+> This might be fixed if core ticket is accepted: https://core.trac.wordpress.org/ticket/64861 
 
 ---
 
