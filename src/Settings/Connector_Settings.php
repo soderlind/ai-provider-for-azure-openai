@@ -10,6 +10,8 @@
 
 namespace WordPress\AzureOpenAiAiProvider\Settings;
 
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Connector Settings class.
  *

@@ -74,13 +74,13 @@ namespace {
 						return $text;
 					},
 					'_e'           => static function ( $text, $domain = 'default' ) {
-						echo $text;
+						echo esc_html( $text );
 					},
 					'esc_html__'   => static function ( $text, $domain = 'default' ) {
 						return $text;
 					},
 					'esc_html_e'   => static function ( $text, $domain = 'default' ) {
-						echo $text;
+						echo esc_html( $text );
 					},
 					'esc_attr__'   => static function ( $text, $domain = 'default' ) {
 						return $text;
@@ -100,6 +100,9 @@ namespace {
 					'wp_kses_post' => static function ( $data ) {
 						return $data;
 					},
+					'wp_strip_all_tags' => static function ( $str ) {
+						return strip_tags( $str );
+					},
 				)
 			);
 
@@ -107,7 +110,7 @@ namespace {
 			Monkey\Functions\stubs(
 				array(
 					'sanitize_text_field' => static function ( $str ) {
-						return trim( strip_tags( $str ) );
+						return trim( wp_strip_all_tags( $str ) );
 					},
 					'absint'              => static function ( $val ) {
 						return abs( intval( $val ) );

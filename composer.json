@@ -11,8 +11,7 @@
 		}
 	],
 	"require": {
-		"php": ">=7.4",
-		"yahnis-elsts/plugin-update-checker": "^5.6"
+		"php": ">=7.4"
 	},
 	"suggest": {
 		"wordpress/php-ai-client": "Required. The core PHP AI Client SDK that this provider extends."

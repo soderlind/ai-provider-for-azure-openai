@@ -41,26 +41,7 @@ jobs:
         run: |
           mkdir -p /tmp/ai-provider-for-azure-openai
           rsync -a \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='.gitattributes' \
-            --exclude='.gitignore' \
-            --exclude='.phpunit.cache/' \
-            --exclude='node_modules/' \
-            --exclude='tests/' \
-            --exclude='src/js/' \
-            --exclude='composer.json' \
-            --exclude='composer.lock' \
-            --exclude='package.json' \
-            --exclude='package-lock.json' \
-            --exclude='webpack.config.js' \
-            --exclude='i18n-map.json' \
-            --exclude='phpunit.xml.dist' \
-            --exclude='phpcs.xml' \
-            --exclude='README.md' \
-            --exclude='.editorconfig' \
-            --exclude='vendor/bin/' \
-            --exclude='languages/.gitkeep' \
+            --exclude-from='.distignore' \
             . /tmp/ai-provider-for-azure-openai/
 
       - name: Archive Release
@@ -72,14 +53,6 @@ jobs:
           echo "Listing ai-provider-for-azure-openai.zip entries:"
           unzip -l ai-provider-for-azure-openai.zip || { echo "Failed to list zip contents"; exit 1; }
           echo "Total files: $(unzip -l ai-provider-for-azure-openai.zip | awk 'END{print $2}')"
-
-          # Verify Plugin Update Checker is included (required dependency)
-          if unzip -l ai-provider-for-azure-openai.zip | grep -q "vendor/yahnis-elsts/plugin-update-checker"; then
-            echo "✓ Plugin Update Checker is included"
-          else
-            echo "✗ ERROR: Plugin Update Checker is missing from the release!"
-            exit 1
-          fi
 
       - name: Upload zip to release
         env:

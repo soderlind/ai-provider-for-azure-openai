@@ -1,10 +1,10 @@
 === AI Provider for Azure OpenAI ===
 Contributors: PerS
-Tags: ai, azure, openai, gpt, artificial-intelligence, connector
+Tags: ai, azure, openai, gpt, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,10 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.4.1 =
+* Removed GitHub updater integration for WordPress.org compatibility
+* Added direct file access protection to src/autoload.php
+
 = 1.4.0 =
 * Fixed provider not appearing in WP Connector Registry — changed provider ID from `azure-openai` to `azure_openai` to satisfy the `[a-z0-9_]+` validation rule
 * Fixed "Most experiments require a valid AI Connector" warning in AI Experiments plugin
@@ -153,6 +157,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.4.1 =
+Removes GitHub updater integration to comply with WordPress.org plugin guidelines.
 
 = 1.4.0 =
 Fixes provider registration with WP Connector Registry. Required if you use AI Experiments or any feature relying on wp_get_connectors().
