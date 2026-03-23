@@ -1,6 +1,6 @@
 # How to Add a Custom AI Provider to WordPress 7
 
-> Tested with WordPress 7.0-beta5
+> Tested with WordPress 7.0-beta6
 
 This guide walks you through building a WordPress plugin that registers a
 custom AI provider with the new **AI Client** that ships with WordPress 7.0.
@@ -52,6 +52,13 @@ By the end you will have:
 > See [§5c](#5c-register-and-enqueue-the-module),
 > [§5d](#5d-write-the-javascript-connector), and
 > [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3) for details.
+
+> **🔄 Changes in WordPress 7.0 Beta 6**:
+>
+> Core now binds connector API keys to providers on `init` priority `20` via
+> `_wp_connectors_pass_default_keys_to_ai_client()`. If your provider needs a
+> custom authentication object (for example Azure's `api-key` header), register
+> your override **after** that runs (e.g. `init` priority `30`).
 
 ---
 
@@ -1147,8 +1154,8 @@ function setup_authentication(): void {
         );
     }
 }
-// Run AFTER core's init (priority 10) to ensure credentials are loaded.
-add_action( 'init', __NAMESPACE__ . '\\setup_authentication', 15 );
+// Run after core connector key binding (priority 20).
+add_action( 'init', __NAMESPACE__ . '\\setup_authentication', 30 );
 ```
 
 ---
@@ -1215,7 +1222,7 @@ function setup_authentication(): void {
         );
     }
 }
-add_action( 'init', __NAMESPACE__ . '\\setup_authentication', 15 );
+add_action( 'init', __NAMESPACE__ . '\\setup_authentication', 30 );
 
 // 3. Register connector settings.
 add_action( 'init', [ ConnectorSettings::class, 'register' ] );
@@ -1436,7 +1443,7 @@ Run `npm run test` (one-off) or `npm run test:watch` (interactive mode).
   `'connectors'` as the group and `'show_in_rest' => true`.
 
 - **API requests failing?** Check that `setup_authentication()` runs after
-  the credentials are loaded (use `init` priority 15 or later).
+    core connector key binding in WP 7.0 Beta 6 (use `init` priority 30).
 
 - **"No models found that support text_generation for this prompt"?** This
   means the SDK's `ModelRequirements::areMetBy()` rejected every model. Common

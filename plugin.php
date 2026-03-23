@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.4.1
+ * Version: 1.4.2
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.4.1' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.4.2' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -133,8 +133,9 @@ function setup_authentication(): void {
 		);
 	}
 }
-// Run AFTER wp-ai-client (priority 10) to read credentials they stored.
-add_action( 'init', __NAMESPACE__ . '\\setup_authentication', 15 );
+// Run after core connector key binding (priority 20) so Azure's `api-key`
+// header auth overrides the generic bearer-token auth object.
+add_action( 'init', __NAMESPACE__ . '\\setup_authentication', 30 );
 
 /**
  * Initialize the settings manager for Azure-specific settings (endpoint, api-version, deployment-id).
