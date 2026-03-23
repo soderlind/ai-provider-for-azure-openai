@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,10 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 
 == Changelog ==
 
+= 1.4.2 =
+* WordPress 7.0 Beta 6 compatibility: run Azure authentication setup after core connector key binding to preserve `api-key` header authentication
+* Updated documentation with Beta 6 hook-order notes
+
 = 1.4.1 =
 * Removed GitHub updater integration for WordPress.org compatibility
 * Added direct file access protection to src/autoload.php
@@ -157,6 +161,9 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 This plugin is based on [AI Provider for OpenAI](https://github.com/WordPress/ai-provider-for-openai) by the WordPress AI Team. It adapts the OpenAI provider architecture for Azure OpenAI's API format and authentication requirements.
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+Fixes WordPress 7.0 Beta 6 auth hook-order compatibility that could cause Azure requests to use the wrong authentication object.
 
 = 1.4.1 =
 Removes GitHub updater integration to comply with WordPress.org plugin guidelines.

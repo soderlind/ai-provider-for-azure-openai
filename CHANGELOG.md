@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.2
+
+### Fixed
+
+- WordPress 7.0 Beta 6 compatibility: moved `setup_authentication()` to run after core connector key binding so Azure auth is not overwritten by generic auth objects.
+
+### Changed
+
+- Updated docs to note Beta 6 authentication hook-order behavior and recommended `init` priority.
+
 ## 1.4.1
 
 ### Changed

@@ -73,8 +73,8 @@ Once configured, the Azure OpenAI provider is automatically registered with the 
 use WordPress\AiClient\AiClient;
 
 // Get an Azure OpenAI model
-$client = AiClient::default();
-$model = $client->getModel( 'azure_openai', 'gpt-4o' );
+$registry = AiClient::defaultRegistry();
+$model = $registry->getProviderModel( 'azure_openai', 'gpt-4o' );
 
 // Generate text
 $result = $model->generateText( [
