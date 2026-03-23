@@ -9,6 +9,8 @@
 
 namespace WordPress\AzureOpenAiAiProvider\Settings;
 
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Settings Manager class.
  *

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.1
+
+### Changed
+
+- Removed GitHub updater bootstrap integration from `plugin.php` for WordPress.org compatibility
+- Removed the GitHub auto-update claim from `README.md`
+
+### Removed
+
+- `class-github-updater.php` (external updater bootstrap wrapper)
+
 ## 1.4.0
 
 ### Fixed

@@ -5,6 +5,8 @@
  * @package WordPress\AzureOpenAiAiProvider
  */
 
+defined( 'ABSPATH' ) || exit;
+
 spl_autoload_register(
 	// phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.classFound -- Standard autoloader convention.
 	static function ( string $class ): void {

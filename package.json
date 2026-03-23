@@ -1,6 +1,6 @@
 {
 	"name": "ai-provider-for-azure-openai",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"private": true,
 	"description": "AI Provider for Azure OpenAI for the WordPress AI Client.",
 	"author": "Per Soderlind",
