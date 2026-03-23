@@ -49,6 +49,18 @@ jobs:
           unzip -l ai-provider-for-azure-openai.zip || { echo "Failed to list zip contents"; exit 1; }
           echo "Total files: $(unzip -l ai-provider-for-azure-openai.zip | awk 'END{print $2}')"
 
+          if unzip -l ai-provider-for-azure-openai.zip | grep -q "ai-provider-for-azure-openai/.distignore"; then
+            echo "✗ ERROR: .distignore must not be included in release zip"
+            exit 1
+          fi
+
+          if unzip -l ai-provider-for-azure-openai.zip | grep -q "ai-provider-for-azure-openai/vendor/"; then
+            if ! unzip -l ai-provider-for-azure-openai.zip | grep -q "ai-provider-for-azure-openai/composer.json"; then
+              echo "✗ ERROR: composer.json is required when vendor/ is included"
+              exit 1
+            fi
+          fi
+
       - name: Upload zip to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

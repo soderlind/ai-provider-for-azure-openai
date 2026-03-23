@@ -3,6 +3,7 @@
 .gitattributes
 .gitignore
 .editorconfig
+.distignore
 
 .phpunit.cache/
 .phpunit.result.cache
@@ -14,7 +15,6 @@ docs/
 .wordpress-org/
 dist/
 
-composer.json
 composer.lock
 package.json
 package-lock.json
