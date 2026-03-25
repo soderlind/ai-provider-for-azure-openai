@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.2
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,13 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 2. Settings page for configuring Azure OpenAI.
 
 == Changelog ==
+
+= 1.5.0 =
+* WordPress 7.0 RC1 compatibility: `ConnectorItem` prop renamed from `icon` to `logo`, `registerConnector` config key renamed from `label` to `name`
+* Render function accepts `logo` prop from the Connectors page with cloud SVG fallback
+* Script module data filter updated for RC1's `connectors` keyed object format
+* Updated how-to documentation with RC1 API changes
+* Updated tests for the `logo`/`name` API
 
 = 1.4.2 =
 * WordPress 7.0 Beta 6 compatibility: run Azure authentication setup after core connector key binding to preserve `api-key` header authentication

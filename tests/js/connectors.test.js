@@ -28,13 +28,13 @@ vi.mock( '@wordpress/connectors', async ( importOriginal ) => {
 	const orig = await importOriginal();
 	return {
 		...orig,
-		__experimentalConnectorItem: ( { icon, name, description, actionArea, children } ) =>
+		__experimentalConnectorItem: ( { logo, name, description, actionArea, children } ) =>
 			React.createElement(
 				'div',
 				{ 'data-testid': 'connector-item' },
 				React.createElement( 'span', { 'data-testid': 'connector-name' }, name ),
 				React.createElement( 'span', { 'data-testid': 'connector-description' }, description ),
-				icon && React.createElement( 'span', { 'data-testid': 'connector-icon' }, icon ),
+				logo && React.createElement( 'span', { 'data-testid': 'connector-logo' }, logo ),
 				actionArea && React.createElement( 'span', { 'data-testid': 'connector-action' }, actionArea ),
 				children && React.createElement( 'div', { 'data-testid': 'connector-children' }, children )
 			),
@@ -55,7 +55,7 @@ function renderConnector( propsOverrides = {} ) {
 	return render(
 		React.createElement( Component, {
 			slug: 'azure-openai',
-			label: 'Azure OpenAI',
+			name: 'Azure OpenAI',
 			description: 'Test description',
 			...propsOverrides,
 		} )
@@ -96,8 +96,8 @@ describe( 'Azure OpenAI Connector', () => {
 			expect( mockRegisterConnector.mock.calls[ 0 ][ 0 ] ).toBe( 'ai_provider/azure_openai' );
 		} );
 
-		it( 'should provide label, description, and render function', () => {
-			expect( registeredConfig ).toHaveProperty( 'label' );
+		it( 'should provide name, description, and render function', () => {
+			expect( registeredConfig ).toHaveProperty( 'name' );
 			expect( registeredConfig ).toHaveProperty( 'description' );
 			expect( typeof registeredConfig.render ).toBe( 'function' );
 		} );
@@ -158,17 +158,17 @@ describe( 'Azure OpenAI Connector', () => {
 
 	/* ---- Icon ------------------------------------------------- */
 
-	describe( 'icon', () => {
+	describe( 'logo', () => {
 		beforeEach( () => {
 			window.wp.apiFetch.mockResolvedValue( {
 				connectors_ai_azure_openai_api_key: '',
 			} );
 		} );
 
-		it( 'should render a cloud SVG icon at 40×40', async () => {
+		it( 'should render a cloud SVG logo at 40×40', async () => {
 			await act( async () => renderConnector() );
-			const iconContainer = screen.getByTestId( 'connector-icon' );
-			const svg = iconContainer.querySelector( 'svg' );
+			const logoContainer = screen.getByTestId( 'connector-logo' );
+			const svg = logoContainer.querySelector( 'svg' );
 			expect( svg ).toBeTruthy();
 			expect( svg.getAttribute( 'width' ) ).toBe( '40' );
 			expect( svg.getAttribute( 'height' ) ).toBe( '40' );
