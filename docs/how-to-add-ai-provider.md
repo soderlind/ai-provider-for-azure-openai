@@ -1,6 +1,6 @@
 # How to Add a Custom AI Provider to WordPress 7
 
-> Tested with WordPress 7.0-beta6
+> Tested with WordPress 7.0 RC1
 
 This guide walks you through building a WordPress plugin that registers a
 custom AI provider with the new **AI Client** that ships with WordPress 7.0.
@@ -59,6 +59,24 @@ By the end you will have:
 > `_wp_connectors_pass_default_keys_to_ai_client()`. If your provider needs a
 > custom authentication object (for example Azure's `api-key` header), register
 > your override **after** that runs (e.g. `init` priority `30`).
+
+> **🔄 Changes in WordPress 7.0 RC1** (compared to Beta 6):
+>
+> 1. **`ConnectorItem` prop renamed: `icon` → `logo`.** The `ConnectorItem`
+>    component no longer accepts an `icon` prop. Use `logo` instead. Your SVG
+>    element or React node goes in `logo`.
+> 2. **`registerConnector` config: `label` → `name`.** The configuration
+>    object passed to `registerConnector()` now uses `name` instead of `label`.
+> 3. **Render function props changed.** The Connectors page now passes
+>    `name`, `description`, `logo`, `slug`, `authentication`, and `plugin`
+>    to your render component (previously `label` instead of `name`, and no
+>    `logo` prop).
+> 4. **Script module data key changed.** The connector data embedded in the
+>    page JSON now uses `connectors` (not `defaultConnectors`) as the top-level
+>    key.  Update your `filter_connector_script_data` filter accordingly.
+>
+> See [§5d](#5d-write-the-javascript-connector) and
+> [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3) for updated code.
 
 ---
 
@@ -955,9 +973,11 @@ function useMySettings() {
 /**
  * The render component passed to registerConnector().
  *
- * Receives `slug`, `label`, and `description` props from the Connectors page.
+ * Receives `slug`, `name`, `description`, and `logo` props from the
+ * Connectors page. (Before RC1, `name` was called `label` and `logo`
+ * was not passed.)
  */
-function MyConnector( { slug, label, description } ) {
+function MyConnector( { slug, name, description, logo } ) {
     const {
         isLoading, isConnected, apiKey, endpoint,
         setEndpoint, saveApiKey, removeApiKey, saveEndpoint,
@@ -968,8 +988,8 @@ function MyConnector( { slug, label, description } ) {
     // Loading state.
     if ( isLoading ) {
         return el( ConnectorItem, {
-            icon: el( MyIcon ),
-            name: label,
+            logo: logo || el( MyIcon ),
+            name,
             description,
             actionArea: el( 'span', { className: 'spinner is-active' } ),
         } );
@@ -1014,8 +1034,8 @@ function MyConnector( { slug, label, description } ) {
     );
 
     return el( ConnectorItem, {
-        icon: el( MyIcon ),
-        name: label,
+        logo: logo || el( MyIcon ),
+        name,
         description,
         actionArea: actionButton,
     }, settingsPanel );
@@ -1045,7 +1065,7 @@ function MyIcon() {
 // The 'type' is derived from your ProviderTypeEnum (e.g. 'ai-provider')
 // and the 'id' from your Provider class's slug.
 registerConnector( 'ai_provider/my_ai_provider', {
-    label: __( 'My AI Service', 'my-ai-provider' ),
+    name: __( 'My AI Service', 'my-ai-provider' ),
     description: __( 'Text generation with My AI Service.', 'my-ai-provider' ),
     render: MyConnector,
 } );
@@ -1062,8 +1082,8 @@ registerConnector( 'ai_provider/my_ai_provider', {
 
 | API                                                       | What it does                                                                                          |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `registerConnector( slug, { label, description, render })` | Adds your connector to the Connectors page. The `render` function receives `slug`, `label`, `description` as props. |
-| `ConnectorItem`                                           | UI component for a connector row. Props: `icon`, `name`, `description`, `actionArea`, `children` (expanded panel). |
+| `registerConnector( slug, { name, description, render })` | Adds your connector to the Connectors page. The `render` function receives `slug`, `name`, `description`, `logo` as props. |
+| `ConnectorItem`                                           | UI component for a connector row. Props: `logo`, `name`, `description`, `actionArea`, `children` (expanded panel). |
 | `DefaultConnectorSettings`                                | Reusable API-key input. Props: `onSave`, `onRemove`, `initialValue`, `readOnly`, `helpUrl`, `helpLabel`. |
 
 ### 5e. Prevent Core from Overriding Your Connector (Beta 3)
@@ -1085,13 +1105,10 @@ and remove your provider before the page renders:
  * Hook both filter names to cover both page variants.
  */
 function filter_connector_script_data( array $data ): array {
-    if ( isset( $data['defaultConnectors'] ) && is_array( $data['defaultConnectors'] ) ) {
-        $data['defaultConnectors'] = array_values(
-            array_filter(
-                $data['defaultConnectors'],
-                fn( $c ) => ( $c['id'] ?? '' ) !== 'my_ai_provider'
-            )
-        );
+    // RC1 uses 'connectors' as the top-level key.
+    // Earlier betas used 'defaultConnectors'.
+    if ( isset( $data['connectors']['my_ai_provider'] ) ) {
+        unset( $data['connectors']['my_ai_provider'] );
     }
     return $data;
 }
@@ -1250,15 +1267,10 @@ function enqueue_connector_module(): void {
 add_action( 'options-connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 
-// 6. (Beta 3) Filter out our provider from core's auto-generated connectors.
+// 6. Filter out our provider from core's auto-generated connectors.
 function filter_connector_script_data( array $data ): array {
-    if ( isset( $data['defaultConnectors'] ) && is_array( $data['defaultConnectors'] ) ) {
-        $data['defaultConnectors'] = array_values(
-            array_filter(
-                $data['defaultConnectors'],
-                fn( $c ) => ( $c['id'] ?? '' ) !== 'my_ai_provider'
-            )
-        );
+    if ( isset( $data['connectors']['my_ai_provider'] ) ) {
+        unset( $data['connectors']['my_ai_provider'] );
     }
     return $data;
 }

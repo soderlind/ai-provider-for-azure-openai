@@ -201,7 +201,7 @@ function useAzureSettings() {
  * @param {string} props.label      Human-readable label.
  * @param {string} props.description One-line provider description.
  */
-function AzureOpenAIConnector( { slug, label, description } ) {
+function AzureOpenAIConnector( { slug, name, description, logo } ) {
 	const {
 		isLoading,
 		isConnected,
@@ -256,8 +256,8 @@ function AzureOpenAIConnector( { slug, label, description } ) {
 	/* ---- loading state ---- */
 	if ( isLoading ) {
 		return el( ConnectorItem, {
-			icon: el( CloudIcon ),
-			name: label,
+			logo: logo || el( CloudIcon ),
+			name,
 			description,
 			actionArea: el( 'span', { className: 'spinner is-active' } ),
 		} );
@@ -403,8 +403,8 @@ function AzureOpenAIConnector( { slug, label, description } ) {
 		);
 
 	return el( ConnectorItem, {
-		icon: el( CloudIcon ),
-		name: label,
+		logo: logo || el( CloudIcon ),
+		name,
 		description,
 		actionArea: actionButton,
 	}, settingsPanel );
@@ -419,7 +419,7 @@ function AzureOpenAIConnector( { slug, label, description } ) {
  * Our registration is the only one, so no timing workaround is needed.
  */
 registerConnector( 'ai_provider/azure_openai', {
-	label: __( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
+	name: __( 'Azure OpenAI', 'ai-provider-for-azure-openai' ),
 	description: __(
 		'Text, image, and embedding generation with Azure-hosted OpenAI models.',
 		'ai-provider-for-azure-openai'

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.0
+
+### Fixed
+
+- WordPress 7.0 RC1 compatibility: `ConnectorItem` prop renamed from `icon` to `logo`, `registerConnector` config key renamed from `label` to `name`.
+- Render function now accepts `logo` prop from the Connectors page and falls back to the built-in cloud SVG when no logo is provided.
+
+### Changed
+
+- JS connector registration uses `name` instead of `label` in the config object.
+- `ConnectorItem` receives `logo` (with `CloudIcon` fallback) instead of `icon`.
+- Script module data filter updated from `defaultConnectors` array to `connectors` keyed object.
+- Updated `docs/how-to-add-ai-provider.md` with RC1 API changes and new changelog section.
+- Updated tests to match the `logo`/`name` API.
+
 ## 1.4.2
 
 ### Fixed
