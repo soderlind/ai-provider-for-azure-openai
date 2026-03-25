@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.1
+
+### Fixed
+
+- Fix double API key masking caused by RC1's centralized `_wp_connectors_rest_settings_dispatch()` handler masking on top of the plugin's own `option_` filter.
+- Fix API key silently emptied on save when endpoint URL is not yet configured — RC1's key validation calls `isProviderConfigured()` which hits the models endpoint.
+
+### Changed
+
+- Replace `filter_connector_script_data()` with `unregister_from_connector_registry()` via `wp_connectors_init` hook — prevents core from managing the Azure API key entirely (masking, validation, key binding, setting registration).
+- Updated how-to documentation with RC1 connector registry unregister pattern, `wp_supports_ai()` gate, and key validation on save.
+
 ## 1.5.0
 
 ### Fixed
