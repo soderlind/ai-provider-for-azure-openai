@@ -51,7 +51,7 @@ By the end you will have:
 >
 > See [§5c](#5c-register-and-enqueue-the-module),
 > [§5d](#5d-write-the-javascript-connector), and
-> [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3) for details.
+> [§5e](#5e-prevent-core-from-overriding-your-connector) for details.
 
 > **🔄 Changes in WordPress 7.0 Beta 6**:
 >
@@ -73,13 +73,31 @@ By the end you will have:
 >    `logo` prop).
 > 4. **Script module data key changed.** The connector data embedded in the
 >    page JSON now uses `connectors` (not `defaultConnectors`) as the top-level
->    key.  Update your `filter_connector_script_data` filter accordingly.
+>    key. This matters if you still use the legacy `filter_connector_script_data`
+>    approach (see §5e for the preferred connector-registry approach).
 > 5. **Provider ID format relaxed.** The Connector Registry now accepts hyphens
 >    in provider IDs (`/^[a-z0-9_-]+$/`). Previously only underscores were
 >    allowed. See [Core Trac #64861](https://core.trac.wordpress.org/ticket/64861).
+> 6. **`wp_supports_ai()` gate.** New function (+ `wp_supports_ai` filter).
+>    When AI is disabled (`WP_AI_SUPPORT` constant = `false` or filter returns
+>    `false`), `WP_Connector_Registry::register()` silently returns `null` for
+>    `ai_provider` type connectors. Plan accordingly.
+> 7. **Connector registry unregister pattern replaces data filter.** If your
+>    plugin provides a fully custom Connectors page UI, **unregister from the
+>    connector registry** via `wp_connectors_init` instead of filtering script
+>    module data. This prevents core from managing your API key (masking,
+>    validation, and key binding) — avoiding double-masking and failed
+>    validation when your provider has extra setup requirements.
+>    See [§5e](#5e-prevent-core-from-overriding-your-connector) for the new
+>    recommended approach.
+> 8. **Core validates API keys on save.** `_wp_connectors_rest_settings_dispatch()`
+>    now calls `isProviderConfigured()` when a key is saved via POST/PUT. If
+>    validation fails (e.g. the provider needs an endpoint URL that isn't set
+>    yet), the key is silently reverted to an empty string. Unregistering from
+>    the connector registry (item 7) avoids this entirely.
 >
 > See [§5d](#5d-write-the-javascript-connector) and
-> [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3) for updated code.
+> [§5e](#5e-prevent-core-from-overriding-your-connector) for updated code.
 
 ---
 
@@ -100,7 +118,7 @@ By the end you will have:
   - [5b. Build the JavaScript with wp-scripts](#5b-build-the-javascript-with-wp-scripts)
   - [5c. Register and Enqueue the Module](#5c-register-and-enqueue-the-module)
   - [5d. Write the JavaScript Connector](#5d-write-the-javascript-connector)
-  - [5e. Prevent Core from Overriding Your Connector (Beta 3)](#5e-prevent-core-from-overriding-your-connector-beta-3)
+  - [5e. Prevent Core from Overriding Your Connector](#5e-prevent-core-from-overriding-your-connector)
 - [Step 6 — Wire Up Authentication](#step-6--wire-up-authentication)
 - [Complete File Listing](#complete-file-listing)
 - [Testing Your Provider](#testing-your-provider)
@@ -1089,27 +1107,71 @@ registerConnector( 'ai_provider/my_ai_provider', {
 | `ConnectorItem`                                           | UI component for a connector row. Props: `logo`, `name`, `description`, `actionArea`, `children` (expanded panel). |
 | `DefaultConnectorSettings`                                | Reusable API-key input. Props: `onSave`, `onRemove`, `initialValue`, `readOnly`, `helpUrl`, `helpLabel`. |
 
-### 5e. Prevent Core from Overriding Your Connector (Beta 3)
+### 5e. Prevent Core from Overriding Your Connector
 
 Starting in Beta 3, WordPress reads every registered AI Client provider and
-pre-populates the Connectors page with a **generic `ApiKeyConnector`** for
-each. This data is embedded in a `<script id="wp-script-module-data-…">` tag
-as JSON.
+auto-creates a connector entry in the **Connector Registry** for each. This
+entry drives several core behaviors:
 
-If your plugin registers a custom connector UI, the core-generated entry
-competes with yours in the Redux store. To prevent this, filter the JSON data
-and remove your provider before the page renders:
+- A **generic `ApiKeyConnector`** UI on the Connectors page.
+- **API key masking** in REST responses via `_wp_connectors_rest_settings_dispatch()`.
+- **API key validation on save** — core calls `isProviderConfigured()` which
+  hits the provider's model-list endpoint. If it fails (e.g. your provider
+  needs an endpoint URL or other config that isn't set yet), the key is
+  **silently reverted to an empty string**.
+- **Key binding** — core passes the stored DB key to the AI Client registry.
+
+If your plugin provides a fully custom connector UI and manages its own API
+key masking (via an `option_` filter), the cleanest approach is to
+**unregister from the connector registry** entirely. This prevents
+double-masking, failed validation, and duplicate setting registration.
+
+#### Recommended: Unregister from the Connector Registry (RC1+)
+
+The `wp_connectors_init` action fires after core has populated the registry
+from the AI Client. Use it to remove your entry:
 
 ```php
 /**
- * Remove our provider from the auto-generated connector data
- * so our custom JS connector is the only one registered.
+ * Unregister from the connector registry so core does not manage our API key.
  *
- * Hook both filter names to cover both page variants.
+ * This prevents:
+ * - Double-masking (core + our option_ filter both mask the key).
+ * - Failed key validation (core validates by hitting the models endpoint
+ *   which requires additional config like endpoint URL).
+ * - Duplicate setting registration.
+ *
+ * The plugin's own option_ filter handles masking, and the JS module
+ * provides the full custom UI via registerConnector().
+ *
+ * @param \WP_Connector_Registry $registry Connector registry instance.
  */
+function unregister_from_connector_registry( \WP_Connector_Registry $registry ): void {
+    if ( $registry->is_registered( 'my_ai_provider' ) ) {
+        $registry->unregister( 'my_ai_provider' );
+    }
+}
+add_action( 'wp_connectors_init', __NAMESPACE__ . '\\unregister_from_connector_registry' );
+```
+
+Once unregistered, core's dispatch handler, key binder, and settings
+registration all skip your provider. Your JS `registerConnector()` call
+remains the sole source of the Connectors page UI.
+
+> **Note:** Unregistering from the **connector** registry does NOT unregister
+> from the **AI Client** registry. Your provider remains fully functional for
+> `wp_ai_client_prompt()` and other AI Client API calls.
+
+#### Legacy: Filter script module data (Beta 3–Beta 6)
+
+Before RC1 introduced key validation and centralized masking, the recommended
+approach was to filter the JSON data and remove your provider from the page
+payload. This still works but does **not** prevent double-masking or failed
+validation:
+
+```php
+// Legacy approach — prefer unregister_from_connector_registry() in RC1+.
 function filter_connector_script_data( array $data ): array {
-    // RC1 uses 'connectors' as the top-level key.
-    // Earlier betas used 'defaultConnectors'.
     if ( isset( $data['connectors']['my_ai_provider'] ) ) {
         unset( $data['connectors']['my_ai_provider'] );
     }
@@ -1124,12 +1186,6 @@ add_filter(
     __NAMESPACE__ . '\\filter_connector_script_data'
 );
 ```
-
-> **Why two filters?** The filter name derives from the page file. Beta 3's
-> primary page is `options-connectors/page-wp-admin.php` → filter
-> `script_module_data_options-connectors-wp-admin`. The fallback page
-> `connectors/page-wp-admin.php` uses `script_module_data_connectors-wp-admin`.
-> Hooking both keeps you safe across beta versions.
 
 ---
 
@@ -1270,21 +1326,13 @@ function enqueue_connector_module(): void {
 add_action( 'options-connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 
-// 6. Filter out our provider from core's auto-generated connectors.
-function filter_connector_script_data( array $data ): array {
-    if ( isset( $data['connectors']['my_ai_provider'] ) ) {
-        unset( $data['connectors']['my_ai_provider'] );
+// 6. Unregister from the connector registry so core does not manage our key.
+function unregister_from_connector_registry( \WP_Connector_Registry $registry ): void {
+    if ( $registry->is_registered( 'my_ai_provider' ) ) {
+        $registry->unregister( 'my_ai_provider' );
     }
-    return $data;
 }
-add_filter(
-    'script_module_data_options-connectors-wp-admin',
-    __NAMESPACE__ . '\\filter_connector_script_data'
-);
-add_filter(
-    'script_module_data_connectors-wp-admin',
-    __NAMESPACE__ . '\\filter_connector_script_data'
-);
+add_action( 'wp_connectors_init', __NAMESPACE__ . '\\unregister_from_connector_registry' );
 ```
 
 ---
@@ -1449,8 +1497,19 @@ Run `npm run test` (one-off) or `npm run test:watch` (interactive mode).
   `options-connectors-wp-admin_init`, not `connectors-wp-admin_init`.
 
 - **Custom UI replaced by a generic API-key input?** Core's auto-registration
-  is overwriting your connector. Add the `script_module_data_*` filter
-  described in [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3).
+  is overwriting your connector. Unregister from the connector registry as
+  described in [§5e](#5e-prevent-core-from-overriding-your-connector).
+
+- **API key disappears after saving?** In RC1, core validates keys on save
+  by calling `isProviderConfigured()`. If your provider requires additional
+  configuration (endpoint URL, deployment ID, etc.) before the key can be
+  validated, the key is silently reverted to empty. Fix: unregister from the
+  connector registry so core skips validation. See [§5e](#5e-prevent-core-from-overriding-your-connector).
+
+- **API key shows as all bullets (no last 4 chars)?** Double-masking: core's
+  REST dispatch handler and your `option_` filter both masked the key. Fix:
+  either remove your `option_` filter and let core handle masking, or
+  unregister from the connector registry so core doesn't mask. See [§5e](#5e-prevent-core-from-overriding-your-connector).
 
 - **Settings not saving?** Make sure your `register_setting()` calls use
   `'connectors'` as the group and `'show_in_rest' => true`.

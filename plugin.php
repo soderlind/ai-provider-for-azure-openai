@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.5.0' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.5.1' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -193,25 +193,27 @@ add_action( 'options-connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_conne
 add_action( 'connectors-wp-admin_init', __NAMESPACE__ . '\\enqueue_connector_module' );
 
 /**
- * Remove our provider from the connector JSON data sent to JavaScript.
+ * Unregister from the connector registry so core does not manage our API key.
  *
- * Core's registerDefaultConnectors() reads this data and registers a generic
- * ApiKeyConnector for every provider. Because that function runs AFTER our
- * script module (it's loaded via a dynamic import chain), it would overwrite
- * our custom connector registration. Removing the entry from the data
- * prevents the conflict entirely.
+ * Core's _wp_connectors_rest_settings_dispatch() validates keys on save by
+ * calling isProviderConfigured(), which hits the list-models endpoint.
+ * For Azure this fails when the endpoint URL isn't configured yet, silently
+ * emptying the saved key. Core also masks keys in REST responses, which
+ * double-masks because the plugin already uses an option_ filter.
  *
- * @param array $data Script module data.
- * @return array Filtered data.
+ * Unregistering solves both problems: core skips validation and masking for
+ * Azure, while the plugin's own option_ filter handles masking and the JS
+ * module provides the full custom UI via registerConnector().
+ *
+ * @param \WP_Connector_Registry $registry Connector registry instance.
+ * @return void
  */
-function filter_connector_script_data( array $data ): array {
-	if ( isset( $data['connectors']['azure_openai'] ) ) {
-		unset( $data['connectors']['azure_openai'] );
+function unregister_from_connector_registry( \WP_Connector_Registry $registry ): void {
+	if ( $registry->is_registered( 'azure_openai' ) ) {
+		$registry->unregister( 'azure_openai' );
 	}
-	return $data;
 }
-add_filter( 'script_module_data_options-connectors-wp-admin', __NAMESPACE__ . '\\filter_connector_script_data', 20 );
-add_filter( 'script_module_data_connectors-wp-admin', __NAMESPACE__ . '\\filter_connector_script_data', 20 );
+add_action( 'wp_connectors_init', __NAMESPACE__ . '\\unregister_from_connector_registry' );
 
 /**
  * Run one-time migration from legacy settings to connector options.
