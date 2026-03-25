@@ -74,6 +74,9 @@ By the end you will have:
 > 4. **Script module data key changed.** The connector data embedded in the
 >    page JSON now uses `connectors` (not `defaultConnectors`) as the top-level
 >    key.  Update your `filter_connector_script_data` filter accordingly.
+> 5. **Provider ID format relaxed.** The Connector Registry now accepts hyphens
+>    in provider IDs (`/^[a-z0-9_-]+$/`). Previously only underscores were
+>    allowed. See [Core Trac #64861](https://core.trac.wordpress.org/ticket/64861).
 >
 > See [§5d](#5d-write-the-javascript-connector) and
 > [§5e](#5e-prevent-core-from-overriding-your-connector-beta-3) for updated code.
@@ -106,20 +109,20 @@ By the end you will have:
 
 ---
 
-> **⚠️ Provider ID format:** The Connector Registry (`WP_Connector_Registry`)
-> only accepts IDs matching `/^[a-z0-9_]+$/` — **lowercase letters, digits,
-> and underscores only**. Hyphens are **not** allowed in provider IDs and will
-> cause silent registration failure. Use underscores: `my_ai_provider`, not
-> `my-ai-provider`. This restriction applies to:
+> **Provider ID format:** The Connector Registry (`WP_Connector_Registry`)
+> accepts IDs matching `/^[a-z0-9_-]+$/` — **lowercase letters, digits,
+> underscores, and hyphens**. This applies to:
 > - The first argument of `ProviderMetadata` (PHP provider slug)
 > - The first argument of `registerConnector()` (JS connector slug — the `{id}` part)
 > - The first argument of `setProviderRequestAuthentication()` (auth binding)
 > - The `usingProvider()` call in the AI Client API
 >
-> Note: Text domains and plugin directory names **can** use hyphens — this
-> restriction only applies to the provider/connector ID.
+> **Note:** Hyphens in the provider ID are converted to underscores in the
+> auto-generated settings option name (e.g. `azure-openai` →
+> `connectors_ai_azure_openai_api_key`).
 >
-> This might be fixed if core ticket is accepted: https://core.trac.wordpress.org/ticket/64861 
+> **History:** Before RC1, hyphens were rejected (regex was `/^[a-z0-9_]+$/`).
+> This was fixed via [Core Trac #64861](https://core.trac.wordpress.org/ticket/64861).
 
 ---
 
@@ -313,7 +316,7 @@ class MyProvider extends AbstractApiProvider {
      */
     protected static function createProviderMetadata(): ProviderMetadata {
         return new ProviderMetadata(
-            'my_ai_provider',                // Unique slug (underscores only, no hyphens).
+            'my_ai_provider',                // Unique slug (lowercase, digits, underscores, hyphens).
             __( 'My AI Service', 'my-ai-provider' ),  // Display name.
             ProviderTypeEnum::cloud(),       // cloud | server | client.
             'https://my-ai-service.com/keys', // Where users get API keys.
@@ -1166,7 +1169,7 @@ function setup_authentication(): void {
 
         // Option B: Use a custom authentication class.
         $registry->setProviderRequestAuthentication(
-            'my_ai_provider',  // Must match the provider slug (underscores, no hyphens).
+            'my_ai_provider',  // Must match the provider slug.
             new \MyAiProvider\Http\MyRequestAuthentication( $api_key )
         );
     }
@@ -1301,7 +1304,7 @@ add_filter(
 use WordPress\AiClient\AiClient;
 
 $result = AiClient::prompt( 'Explain gravity in one sentence.' )
-    ->usingProvider( 'my_ai_provider' )   // Your provider slug (underscores only).
+    ->usingProvider( 'my_ai_provider' )   // Your provider slug.
     ->usingModel( 'my-model-large' )      // Your model ID.
     ->generateTextResult();
 
@@ -1436,11 +1439,9 @@ Run `npm run test` (one-off) or `npm run test:watch` (interactive mode).
 
 ### Debugging tips
 
-- **Provider not appearing on Connectors page?** First, check that your
-  provider ID uses only lowercase letters, digits, and underscores — **no
-  hyphens**. `WP_Connector_Registry::register()` silently rejects IDs that
-  don't match `/^[a-z0-9_]+$/`, so `my-provider` will fail while
-  `my_provider` works. If the ID is correct, check the browser's Network
+- **Provider not appearing on Connectors page?** Check that your
+  provider ID uses only lowercase letters, digits, underscores, and hyphens
+  (`/^[a-z0-9_-]+$/`). If the ID is correct, check the browser's Network
   tab for the script module import map (`<script type="importmap">`). Your
   module should be listed. If it's missing, you likely have an unregistered
   dependency — see [§5a](#5a-important-script-modules-vs-classic-scripts).
@@ -1499,8 +1500,8 @@ WordPress core masks keys by showing bullet characters (`•`) plus the last
 
 Prefix your option names with `connectors_ai_` followed by your provider slug
 to avoid collisions with other plugins. Example:
-`connectors_ai_my_ai_provider_api_key`. The slug must use underscores
-(matching your provider ID).
+`connectors_ai_my_ai_provider_api_key`. Note that hyphens in the provider
+ID are converted to underscores in the option name.
 
 ### Environment variable fallback
 
