@@ -5,7 +5,7 @@
  * Description: AI Provider for Azure OpenAI for the WordPress AI Client.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.5.1' );
+define( 'AZURE_OPENAI_PROVIDER_VERSION', '1.5.2' );
 define( 'AZURE_OPENAI_PROVIDER_FILE', __FILE__ );
 define( 'AZURE_OPENAI_PROVIDER_DIR', plugin_dir_path( __FILE__ ) );
 
