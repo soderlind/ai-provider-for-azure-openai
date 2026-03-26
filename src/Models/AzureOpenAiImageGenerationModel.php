@@ -90,29 +90,29 @@ class AzureOpenAiImageGenerationModel extends AbstractApiBasedModel implements I
 		// Add size if specified in config.
 		$size = $config->getImageSize();
 		if ( ! empty( $size ) ) {
-			$params['size'] = $size;
+			$params[ 'size' ] = $size;
 		} else {
-			$params['size'] = '1024x1024'; // Default size.
+			$params[ 'size' ] = '1024x1024'; // Default size.
 		}
 
 		// Add quality if specified (for DALL-E 3).
 		$quality = $config->getImageQuality();
 		if ( ! empty( $quality ) ) {
-			$params['quality'] = $quality;
+			$params[ 'quality' ] = $quality;
 		}
 
 		// Add style if specified (for DALL-E 3).
 		$style = $config->getImageStyle();
 		if ( ! empty( $style ) ) {
-			$params['style'] = $style;
+			$params[ 'style' ] = $style;
 		}
 
 		// Response format (url or b64_json).
 		$response_format = $config->getImageResponseFormat();
 		if ( ! empty( $response_format ) ) {
-			$params['response_format'] = $response_format;
+			$params[ 'response_format' ] = $response_format;
 		} else {
-			$params['response_format'] = 'url';
+			$params[ 'response_format' ] = 'url';
 		}
 
 		return $params;
@@ -129,17 +129,17 @@ class AzureOpenAiImageGenerationModel extends AbstractApiBasedModel implements I
 
 		$images = array();
 
-		if ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
-			foreach ( $data['data'] as $image_data ) {
-				if ( isset( $image_data['url'] ) ) {
+		if ( isset( $data[ 'data' ] ) && is_array( $data[ 'data' ] ) ) {
+			foreach ( $data[ 'data' ] as $image_data ) {
+				if ( isset( $image_data[ 'url' ] ) ) {
 					$images[] = array(
-						'url'            => $image_data['url'],
-						'revised_prompt' => $image_data['revised_prompt'] ?? null,
+						'url'            => $image_data[ 'url' ],
+						'revised_prompt' => $image_data[ 'revised_prompt' ] ?? null,
 					);
-				} elseif ( isset( $image_data['b64_json'] ) ) {
+				} elseif ( isset( $image_data[ 'b64_json' ] ) ) {
 					$images[] = array(
-						'b64_json'       => $image_data['b64_json'],
-						'revised_prompt' => $image_data['revised_prompt'] ?? null,
+						'b64_json'       => $image_data[ 'b64_json' ],
+						'revised_prompt' => $image_data[ 'revised_prompt' ] ?? null,
 					);
 				}
 			}

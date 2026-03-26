@@ -194,9 +194,11 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 
 		// Image generation models may support text prompts.
 		if ( $has_image_generation && ! $has_text_generation ) {
-			$input_modalities = array( array( ModalityEnum::text() ) );
-			$options[]        = new SupportedOption( OptionEnum::inputModalities(), $input_modalities );
-			$options[]        = new SupportedOption( OptionEnum::customOptions() );
+			$input_modalities  = array( array( ModalityEnum::text() ) );
+			$output_modalities = array( array( ModalityEnum::image() ) );
+			$options[]         = new SupportedOption( OptionEnum::inputModalities(), $input_modalities );
+			$options[]         = new SupportedOption( OptionEnum::outputModalities(), $output_modalities );
+			$options[]         = new SupportedOption( OptionEnum::customOptions() );
 		}
 
 		return $options;

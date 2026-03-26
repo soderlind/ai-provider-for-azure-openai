@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,10 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 2. Settings page for configuring Azure OpenAI.
 
 == Changelog ==
+
+= 1.5.2 =
+* Add missing `outputModalities` (image) for image generation models — fixes model matching when callers request image output
+* Apply WPCS array bracket spacing in image generation model
 
 = 1.5.1 =
 * Fix double API key masking caused by RC1's centralized REST dispatch handler

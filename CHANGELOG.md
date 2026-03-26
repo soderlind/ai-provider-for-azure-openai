@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.2
+
+### Fixed
+
+- Add missing `outputModalities` (image) for image generation models in the metadata directory — fixes model matching when callers request image output.
+- Apply WPCS array bracket spacing in `AzureOpenAiImageGenerationModel`.
+
 ## 1.5.1
 
 ### Fixed
