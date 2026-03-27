@@ -7,14 +7,19 @@
 
 namespace WordPress\AzureOpenAiAiProvider\Models;
 
+use WordPress\AiClient\Files\DTO\File;
+use WordPress\AiClient\Messages\DTO\Message;
+use WordPress\AiClient\Messages\DTO\MessagePart;
+use WordPress\AiClient\Messages\Enums\MessageRoleEnum;
 use WordPress\AiClient\Providers\ApiBasedImplementation\AbstractApiBasedModel;
-use WordPress\AiClient\Providers\DTO\ProviderMetadata;
 use WordPress\AiClient\Providers\Http\DTO\Request;
 use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
 use WordPress\AiClient\Providers\Http\Util\ResponseUtil;
-use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use WordPress\AiClient\Providers\Models\TextToSpeechConversion\Contracts\TextToSpeechConversionModelInterface;
+use WordPress\AiClient\Results\DTO\Candidate;
 use WordPress\AiClient\Results\DTO\GenerativeAiResult;
+use WordPress\AiClient\Results\DTO\TokenUsage;
+use WordPress\AiClient\Results\Enums\FinishReasonEnum;
 use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
@@ -166,7 +171,7 @@ class AzureOpenAiTextToSpeechModel extends AbstractApiBasedModel implements Text
 	 *
 	 * The TTS API returns raw audio bytes, not JSON.
 	 *
-	 * @param \WordPress\AiClient\Providers\Http\Response $response The API response.
+	 * @param \WordPress\AiClient\Providers\Http\DTO\Response $response The API response.
 	 * @return GenerativeAiResult The parsed result.
 	 */
 	protected function parseResponseToGenerativeAiResult( $response ): GenerativeAiResult {
@@ -183,14 +188,23 @@ class AzureOpenAiTextToSpeechModel extends AbstractApiBasedModel implements Text
 			$audio_data = base64_encode( $data['body'] );
 		}
 
+		// Build a candidate with the audio as a data URI file.
+		$data_uri  = 'data:audio/' . self::DEFAULT_RESPONSE_FORMAT . ';base64,' . $audio_data;
+		$file      = new File( $data_uri, 'audio/' . self::DEFAULT_RESPONSE_FORMAT );
+		$message   = new Message(
+			MessageRoleEnum::model(),
+			array( new MessagePart( $file ) )
+		);
+		$candidate = new Candidate( $message, FinishReasonEnum::stop() );
+
 		return new GenerativeAiResult(
-			'', // No text content for audio.
-			null,
-			array(),
+			'',
+			array( $candidate ),
+			new TokenUsage( 0, 0, 0 ),
+			$this->providerMetadata(),
+			$this->metadata(),
 			array(
-				'audio_base64'    => $audio_data,
 				'response_format' => self::DEFAULT_RESPONSE_FORMAT,
-				'raw'             => is_array( $data ) ? $data : array(),
 			)
 		);
 	}

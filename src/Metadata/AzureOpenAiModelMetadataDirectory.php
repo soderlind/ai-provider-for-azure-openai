@@ -50,7 +50,6 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 		// Check if user has configured a specific deployment with capabilities.
 		$settings      = Settings_Manager::get_instance();
 		$deployment_id = $settings->get_deployment_id();
-		$capabilities  = $settings->get_capabilities();
 
 		if ( ! empty( $deployment_id ) ) {
 			// Use user-configured deployment with their specified capabilities.
@@ -193,7 +192,9 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 			$options[]         = new SupportedOption( OptionEnum::customOptions() );
 		}
 
-		// Image generation models may support text prompts.
+		// Image generation models: declare input (text) and output (image) modalities
+		// so the SDK's ModelRequirements::areMetBy() matches when callers request
+		// image output via includeOutputModalities(image).
 		if ( $has_image_generation && ! $has_text_generation ) {
 			$input_modalities  = array( array( ModalityEnum::text() ) );
 			$output_modalities = array( array( ModalityEnum::image() ) );
@@ -375,6 +376,7 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 			// Image generation.
 			'dall-e-3'               => array( CapabilityEnum::imageGeneration() ),
 			'dall-e-2'               => array( CapabilityEnum::imageGeneration() ),
+			'gpt-image-1'            => array( CapabilityEnum::imageGeneration() ),
 			// Embedding models.
 			'text-embedding-ada-002' => array( CapabilityEnum::embeddingGeneration() ),
 			'text-embedding-3-small' => array( CapabilityEnum::embeddingGeneration() ),
@@ -410,7 +412,7 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 		$model_lower = strtolower( $model_name );
 
 		// Image generation models.
-		if ( strpos( $model_lower, 'dall-e' ) !== false ) {
+		if ( strpos( $model_lower, 'dall-e' ) !== false || strpos( $model_lower, 'gpt-image' ) !== false ) {
 			return array( CapabilityEnum::imageGeneration() );
 		}
 

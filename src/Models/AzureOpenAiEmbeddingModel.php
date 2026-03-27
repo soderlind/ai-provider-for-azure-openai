@@ -7,13 +7,17 @@
 
 namespace WordPress\AzureOpenAiAiProvider\Models;
 
+use WordPress\AiClient\Messages\DTO\Message;
+use WordPress\AiClient\Messages\DTO\MessagePart;
+use WordPress\AiClient\Messages\Enums\MessageRoleEnum;
 use WordPress\AiClient\Providers\ApiBasedImplementation\AbstractApiBasedModel;
-use WordPress\AiClient\Providers\DTO\ProviderMetadata;
 use WordPress\AiClient\Providers\Http\DTO\Request;
 use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
 use WordPress\AiClient\Providers\Http\Util\ResponseUtil;
-use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
+use WordPress\AiClient\Results\DTO\Candidate;
 use WordPress\AiClient\Results\DTO\GenerativeAiResult;
+use WordPress\AiClient\Results\DTO\TokenUsage;
+use WordPress\AiClient\Results\Enums\FinishReasonEnum;
 use WordPress\AzureOpenAiAiProvider\Provider\AzureOpenAiProvider;
 use WordPress\AzureOpenAiAiProvider\Settings\Settings_Manager;
 
@@ -104,7 +108,7 @@ class AzureOpenAiEmbeddingModel extends AbstractApiBasedModel {
 	/**
 	 * Parse the API response into a GenerativeAiResult.
 	 *
-	 * @param \WordPress\AiClient\Providers\Http\Response $response The API response.
+	 * @param \WordPress\AiClient\Providers\Http\DTO\Response $response The API response.
 	 * @return GenerativeAiResult The parsed result.
 	 */
 	protected function parseResponseToGenerativeAiResult( $response ): GenerativeAiResult {
@@ -122,22 +126,31 @@ class AzureOpenAiEmbeddingModel extends AbstractApiBasedModel {
 		}
 
 		// Extract usage data.
-		$usage = array();
+		$prompt_tokens     = 0;
+		$completion_tokens = 0;
+		$total_tokens      = 0;
 		if ( isset( $data['usage'] ) ) {
-			$usage = array(
-				'prompt_tokens' => $data['usage']['prompt_tokens'] ?? 0,
-				'total_tokens'  => $data['usage']['total_tokens'] ?? 0,
-			);
+			$prompt_tokens = $data['usage']['prompt_tokens'] ?? 0;
+			$total_tokens  = $data['usage']['total_tokens'] ?? 0;
 		}
 
+		// Build a candidate with the embedding data as JSON text.
+		$embedding_json = wp_json_encode( $embeddings );
+		$message        = new Message(
+			MessageRoleEnum::model(),
+			array( new MessagePart( $embedding_json ?: '[]' ) )
+		);
+		$candidate = new Candidate( $message, FinishReasonEnum::stop() );
+
 		return new GenerativeAiResult(
-			'', // No text content for embeddings.
-			null,
-			$usage,
+			'',
+			array( $candidate ),
+			new TokenUsage( $prompt_tokens, $completion_tokens, $total_tokens ),
+			$this->providerMetadata(),
+			$this->metadata(),
 			array(
 				'embeddings' => $embeddings,
 				'model'      => $data['model'] ?? '',
-				'raw'        => $data,
 			)
 		);
 	}
