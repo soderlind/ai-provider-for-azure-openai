@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,14 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 2. Settings page for configuring Azure OpenAI.
 
 == Changelog ==
+
+= 1.5.4 =
+* Fix 400 Bad Request from `gpt-image-1` — strip `response_format` and `model` body parameters for Azure image generation
+* Re-add missing `outputModalities` (image) and `outputFileType` for image generation metadata — fixes "No models found"
+* Fix `gpt-image-1` misclassified as text generation; add to static fallback model list
+* Update embedding and TTS models to use standardized `GenerativeAiResult` DTOs
+* Fix PHPUnit tests silently exiting (missing `ABSPATH` in bootstrap)
+* Remove unused `yoast/phpunit-polyfills` dev dependency
 
 = 1.5.3 =
 * Rewrite image generation model to use standardized `GenerativeAiResult` with `Candidate`, `File`, `Message`, and `TokenUsage` DTOs

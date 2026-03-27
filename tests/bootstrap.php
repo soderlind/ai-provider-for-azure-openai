@@ -22,6 +22,11 @@ namespace WordPress\AzureOpenAiAiProvider {
 // Global namespace: autoloaders and the base test case.
 namespace {
 
+	// Define ABSPATH so the plugin autoloader does not call exit().
+	if ( ! defined( 'ABSPATH' ) ) {
+		define( 'ABSPATH', sys_get_temp_dir() . '/' );
+	}
+
 	// Composer autoloader.
 	require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
@@ -114,6 +119,9 @@ namespace {
 					},
 					'absint'              => static function ( $val ) {
 						return abs( intval( $val ) );
+					},
+					'wp_json_encode'      => static function ( $data, $options = 0, $depth = 512 ) {
+						return json_encode( $data, $options, $depth );
 					},
 				)
 			);

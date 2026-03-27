@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.4
+
+### Fixed
+
+- Fix 400 Bad Request from `gpt-image-1` caused by `response_format` parameter — strip it for all Azure image generation requests since Azure does not require it.
+- Fix 400 Bad Request from `gpt-image-1` caused by `model` body parameter containing the deployment name — Azure identifies the model via the deployment URL, not the request body.
+- Re-add missing `outputModalities` (image) and `outputFileType` supported options for image generation models in metadata — lost during the 1.5.3 rewrite, caused "No models found" for image generation prompts.
+- Fix `gpt-image-1` deployments misclassified as text generation — add `gpt-image` pattern to `getCapabilitiesForModel()`.
+- Add `gpt-image-1` to the static fallback model list.
+- Fix PHPUnit tests silently exiting — define `ABSPATH` in test bootstrap before loading plugin autoloader.
+
+### Changed
+
+- Update `AzureOpenAiEmbeddingModel` and `AzureOpenAiTextToSpeechModel` to use standardized `GenerativeAiResult` with `Candidate`, `TokenUsage`, `Message`, and `MessagePart` DTOs.
+- Remove unused `yoast/phpunit-polyfills` dev dependency.
+
 ## 1.5.3
 
 ### Changed
