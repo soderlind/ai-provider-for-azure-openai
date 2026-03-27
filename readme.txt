@@ -4,7 +4,7 @@ Tags: ai, azure, openai, gpt, connector
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,13 @@ Yes, both providers can be active simultaneously. Each is registered as a separa
 2. Settings page for configuring Azure OpenAI.
 
 == Changelog ==
+
+= 1.5.3 =
+* Rewrite image generation model to use standardized `GenerativeAiResult` with `Candidate`, `File`, `Message`, and `TokenUsage` DTOs
+* `generateImageResult()` now accepts message array instead of plain string, matching updated interface
+* Add `gpt-image-1` support — uses `output_format` instead of `response_format`
+* Map orientation and aspect ratio config to Azure image sizes
+* Add `outputFileType` supported option to image generation metadata
 
 = 1.5.2 =
 * Add missing `outputModalities` (image) for image generation models — fixes model matching when callers request image output

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.3
+
+### Changed
+
+- Rewrite `AzureOpenAiImageGenerationModel` to use the standardized `GenerativeAiResult` structure with `Candidate`, `File`, `Message`, and `TokenUsage` DTOs instead of raw arrays.
+- `generateImageResult()` now accepts `array $prompt` (list of `Message` objects) instead of a plain string, matching the updated `ImageGenerationModelInterface`.
+- Add support for `gpt-image-1` deployments — uses `output_format` parameter instead of `response_format`.
+- Map `outputMediaOrientation` and `outputMediaAspectRatio` config to Azure image sizes via new `prepareSizeParam()` helper.
+- Pass through custom options from generation config to the API request.
+- Add `outputFileType` supported option to image generation model metadata.
+
 ## 1.5.2
 
 ### Fixed

@@ -50,6 +50,7 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 		// Check if user has configured a specific deployment with capabilities.
 		$settings      = Settings_Manager::get_instance();
 		$deployment_id = $settings->get_deployment_id();
+		$capabilities  = $settings->get_capabilities();
 
 		if ( ! empty( $deployment_id ) ) {
 			// Use user-configured deployment with their specified capabilities.
@@ -198,6 +199,7 @@ class AzureOpenAiModelMetadataDirectory implements ModelMetadataDirectoryInterfa
 			$output_modalities = array( array( ModalityEnum::image() ) );
 			$options[]         = new SupportedOption( OptionEnum::inputModalities(), $input_modalities );
 			$options[]         = new SupportedOption( OptionEnum::outputModalities(), $output_modalities );
+			$options[]         = new SupportedOption( OptionEnum::outputFileType() );
 			$options[]         = new SupportedOption( OptionEnum::customOptions() );
 		}
 
