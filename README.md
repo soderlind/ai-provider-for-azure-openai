@@ -1,8 +1,9 @@
 # AI Provider for Azure OpenAI
 
-AI Provider for Azure OpenAI for the WordPress AI Client.
-
-> Works with WordPress 7.0-RC2, tested using WordPress [AI](https://wordpress.org/plugins/ai/) and [Virtual Media Folders AI Organizer](https://github.com/soderlind/vmfa-ai-organizer?tab=readme-ov-file#virtual-media-folders-ai-organizer)
+```diff
+- Use Azure AI Foundry INSTEAD, Link below
+```
+**[Azure AI Foundry](https://github.com/soderlind/azure-ai-foundry#readme) is a new and improved Azure AI Connector for WordPress 7+**
 
 ## Description
 
