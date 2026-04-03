@@ -1,7 +1,7 @@
 # AI Provider for Azure OpenAI
 
 ```diff
-- Use Azure AI Foundry INSTEAD, Link below
+- Use Azure AI Foundry INSTEAD, link below:
 ```
 **[Azure AI Foundry](https://github.com/soderlind/azure-ai-foundry#readme) is a new and improved Azure AI Connector for WordPress 7+**
 
